@@ -369,7 +369,7 @@ void Overlay::update()
     if( !m_forceNextUpdate && (now - m_lastUpdateTick) < minDelta )
         return;
     m_lastUpdateTick = now;
-    if( m_staticMode && !m_forceNextUpdate )
+    if( m_staticMode && !m_forceNextUpdate && !m_uiEditEnabled)
         return;
     m_forceNextUpdate = false;
 

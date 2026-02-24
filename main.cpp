@@ -589,8 +589,12 @@ int main()
                 if( msg.wParam == (int)Hotkey::UiEdit )
                 {
                     uiEdit = !uiEdit;
-                    for( Overlay* o : overlays )
-                        o->enableUiEdit( uiEdit );
+                    for (Overlay* o : overlays)
+                    {
+                        o->enableUiEdit(uiEdit);
+                        if (!uiEdit)
+							o->requestRedraw(); //need to redraw static overlays like cover to clear edit highlights
+                    }
 
                     if( !uiEdit )
                         giveFocusToIracing();

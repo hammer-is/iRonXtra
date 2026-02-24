@@ -75,6 +75,9 @@ class Overlay
         int             getWidth() const { return m_width; }
         int             getHeight() const { return m_height; }
 
+        // Allow derived/owners to request a redraw outside normal cadence
+        void            requestRedraw() { m_forceNextUpdate = true; }
+
     protected:
 
         virtual void    onEnable();
@@ -129,7 +132,4 @@ class Overlay
         int             m_targetFPS = 60;
         bool            m_forceNextUpdate = false;
         bool            m_staticMode = false;
-
-        // Allow derived/owners to request a redraw outside normal cadence
-        void            requestRedraw() { m_forceNextUpdate = true; }
 };
