@@ -1,16 +1,11 @@
 iron.vcxproj.user
-.vs/
-x64/
-Debug/
-Release/
+.cmake/
+.vscode/
+build/
+out/
 sessionYaml.txt
 config.json
-local.props
 
 # Existing ignores
 .gitignore
-
-# UI build artifacts
-/ui/node_modules/
-/ui/dist/*.map
 

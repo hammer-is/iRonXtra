@@ -160,7 +160,7 @@ void Overlay::enable( bool on )
 
         // DXGI factory
         ComPtr<IDXGIFactory2> dxgiFactory;
-        HRCHECK(CreateDXGIFactory2( isdebug ? DXGI_CREATE_FACTORY_DEBUG : 0, IID_PPV_ARGS(&dxgiFactory) ));
+        HRCHECK(CreateDXGIFactory2( /* isdebug ? DXGI_CREATE_FACTORY_DEBUG : */ 0, IID_PPV_ARGS(&dxgiFactory) )); //Unsure why this broke while changing to GCC
 
         // DXGI Swap chain
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -182,7 +182,7 @@ void Overlay::enable( bool on )
         // D2D factory
         D2D1_FACTORY_OPTIONS factoryOptions = {};
         factoryOptions.debugLevel = isdebug ? D2D1_DEBUG_LEVEL_INFORMATION : D2D1_DEBUG_LEVEL_NONE;
-        HRCHECK(D2D1CreateFactory( D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(m_d2dFactory), &factoryOptions, &m_d2dFactory ));
+        HRCHECK(D2D1CreateFactory( D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), &factoryOptions, &m_d2dFactory ));
 
         // D2D render target
         D2D1_RENDER_TARGET_PROPERTIES targetProperties = {};

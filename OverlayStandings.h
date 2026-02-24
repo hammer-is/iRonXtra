@@ -38,6 +38,7 @@ SOFTWARE.
 #include "OverlayDebug.h"
 #include "stub_data.h"
 #include "ClassColors.h"
+#include <cfloat>
 
 class OverlayStandings : public Overlay
 {

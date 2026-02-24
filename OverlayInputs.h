@@ -748,7 +748,7 @@ class OverlayInputs : public Overlay
             };
             auto resolveAssetPath = [&](const std::wstring& relative) -> std::wstring {
                 const std::wstring exeDir = getExecutableDirW();
-                std::wstring repo = exeDir + L"\\..\\..\\" + relative;
+                std::wstring repo = exeDir + L"\\..\\..\\..\\" + relative;
                 if (fileExistsW(repo)) return repo;
                 std::wstring local = exeDir + L"\\" + relative;
                 if (fileExistsW(local)) return local;

@@ -44,7 +44,7 @@ bool Logger::ensureOpenUnlocked()
 
     if (!m_stream.is_open())
     {
-        m_stream.open(m_path, std::ios::out | std::ios::app);
+        m_stream.open(narrow(m_path), std::ios::out | std::ios::app);
     }
     return m_stream.is_open();
 }

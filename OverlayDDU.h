@@ -33,6 +33,7 @@ SOFTWARE.
 #include "Config.h"
 #include "OverlayDebug.h"
 #include "stub_data.h"
+#include <cfloat>
 
 class OverlayDDU : public Overlay
 {
