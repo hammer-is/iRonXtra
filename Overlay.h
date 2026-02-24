@@ -34,6 +34,7 @@ SOFTWARE.
 #include <dwrite_1.h>
 #include <wrl.h>
 #include "util.h"
+#include <chrono>
 
 class Overlay
 {
@@ -68,12 +69,14 @@ class Overlay
         void            handleMouseWheel( int delta, int x, int y ) { onMouseWheel( delta, x, y ); }
 
         float           getGlobalOpacity() const;
-        void            applyPositionSetting();
 
         int             getX() const { return m_xpos; }
         int             getY() const { return m_ypos; }
         int             getWidth() const { return m_width; }
         int             getHeight() const { return m_height; }
+
+        // Allow derived/owners to request a redraw outside normal cadence
+        void            requestRedraw() { m_forceNextUpdate = true; }
 
     protected:
 
@@ -108,6 +111,12 @@ class Overlay
         int             m_width = 0;
         int             m_height = 0;
 
+#if defined(_DEBUG)
+        std::chrono::high_resolution_clock::time_point loopTimeStart;
+        float loopTimeAvg = 0.0f;
+        int m_dbgLineId = -1;
+#endif
+
         Microsoft::WRL::ComPtr<ID3D11Device>            m_d3dDevice;
         Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;
         Microsoft::WRL::ComPtr<ID2D1Factory2>           m_d2dFactory;
@@ -123,7 +132,4 @@ class Overlay
         int             m_targetFPS = 60;
         bool            m_forceNextUpdate = false;
         bool            m_staticMode = false;
-
-        // Allow derived/owners to request a redraw outside normal cadence
-        void            requestRedraw() { m_forceNextUpdate = true; }
 };

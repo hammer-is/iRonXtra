@@ -37,6 +37,11 @@ class OverlayCover : public Overlay
             : Overlay("OverlayCover")
         {}
 
+        virtual float2 getDefaultSize()
+        {
+            return float2(100, 100); // small black box
+        }
+
         virtual void onConfigChanged()
         {
             // Per-overlay FPS (configurable; default 10)

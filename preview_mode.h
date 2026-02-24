@@ -44,6 +44,3 @@ bool preview_mode_should_show_overlay(const char* overlayName);
 
 // Check if overlays should use stub data (when in preview mode and not connected)
 bool preview_mode_should_use_stub_data();
-
-// Update all overlays based on preview mode state
-void preview_mode_update_overlays();

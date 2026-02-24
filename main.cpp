@@ -60,45 +60,12 @@ SOFTWARE.
 #include "OverlayTire.h"
 #include "OverlayPit.h"
 #include "OverlayTraffic.h"
-#include "GuiCEF.h"
-#include "AppControl.h"
 #include "preview_mode.h"
-
-// Helper: determine if this process is a CEF sub-process (renderer/gpu/utility)
-static bool isCefSubprocess()
-{
-    int argc = 0;
-    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    bool isSub = false;
-    if (argv)
-    {
-        for (int i = 0; i < argc; ++i)
-        {
-            if (wcsncmp(argv[i], L"--type=", 7) == 0 || wcscmp(argv[i], L"--type") == 0)
-            {
-                isSub = true;
-                break;
-            }
-        }
-        LocalFree(argv);
-    }
-    return isSub;
-}
-
-// Bring an already running main window to the foreground if we can find it
-static void focusExistingMainWindow()
-{
-    HWND hwnd = FindWindowW(L"iFL03GuiWindow", NULL);
-    if (hwnd)
-    {
-        ShowWindow(hwnd, SW_SHOWNORMAL);
-        SetForegroundWindow(hwnd);
-    }
-}
 
 enum class Hotkey
 {
     UiEdit,
+    PreviewMode,
     Standings,
     DDU,
     Fuel,
@@ -118,6 +85,7 @@ enum class Hotkey
 static void registerHotkeys()
 {
     UnregisterHotKey( NULL, (int)Hotkey::UiEdit );
+    UnregisterHotKey( NULL, (int)Hotkey::PreviewMode);
     UnregisterHotKey( NULL, (int)Hotkey::Standings );
     UnregisterHotKey( NULL, (int)Hotkey::DDU );
     UnregisterHotKey( NULL, (int)Hotkey::Fuel );
@@ -136,8 +104,11 @@ static void registerHotkeys()
 
     UINT vk, mod;
 
-    if( parseHotkey( g_cfg.getString("General","ui_edit_hotkey","alt-j"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("General","ui_edit_hotkey","alt+j"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::UiEdit, mod, vk );
+
+    if (parseHotkey(g_cfg.getString("General", "preview_hotkey", "alt+p"), &mod, &vk))
+        RegisterHotKey(NULL, (int)Hotkey::PreviewMode, mod, vk);
 
     if( parseHotkey( g_cfg.getString("OverlayStandings","toggle_hotkey","ctrl+1"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Standings, mod, vk );
@@ -145,37 +116,37 @@ static void registerHotkeys()
     if( parseHotkey( g_cfg.getString("OverlayDDU","toggle_hotkey","ctrl+2"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::DDU, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayFuel","toggle_hotkey","ctrl+2"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayFuel","toggle_hotkey","ctrl+3"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Fuel, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayTire","toggle_hotkey","ctrl+3"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayTire","toggle_hotkey","ctrl+4"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Tire, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayInputs","toggle_hotkey","ctrl+4"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayInputs","toggle_hotkey","ctrl+5"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Inputs, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayRelative","toggle_hotkey","ctrl+5"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayRelative","toggle_hotkey","ctrl+6"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Relative, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayCover","toggle_hotkey","ctrl+6"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayCover","toggle_hotkey","ctrl+7"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Cover, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayWeather","toggle_hotkey","ctrl+7"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayWeather","toggle_hotkey","ctrl+8"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Weather, mod, vk );
     
-    if( parseHotkey( g_cfg.getString("OverlayFlags","toggle_hotkey","ctrl+8"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayFlags","toggle_hotkey","ctrl+9"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Flags, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayDelta","toggle_hotkey","ctrl+9"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayDelta","toggle_hotkey","ctrl+0"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Delta, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayRadar","toggle_hotkey","ctrl+0"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayRadar","toggle_hotkey","ctrl+shift+1"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Radar, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayTrack","toggle_hotkey","ctrl+shift+1"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayTrack","toggle_hotkey","ctrl+shift+2"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Track, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayPit","toggle_hotkey","ctrl+shift+2"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayPit","toggle_hotkey","ctrl+shift+3"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Pit, mod, vk );
     
     if( parseHotkey( g_cfg.getString("OverlayTraffic","toggle_hotkey","ctrl+shift+4"),&mod,&vk) )
@@ -271,23 +242,20 @@ static DWORD g_lastConfigReloadLogTick = 0;
 
 int main()
 {
-    Logger::instance().logInfo("iFL03 starting");
+    Logger::instance().logInfo("iRonXtra starting");
 
-    // Single-instance guard for the main/browser process only (skip CEF sub-processes)
+    // Single-instance guard
     HANDLE singleInstanceMutex = NULL;
-    if (!isCefSubprocess())
+
+    singleInstanceMutex = CreateMutexW(NULL, TRUE, L"Global\\iRonXtra_SingleInstance_Mutex");
+    if (singleInstanceMutex && GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        singleInstanceMutex = CreateMutexW(NULL, TRUE, L"Global\\iFL03_SingleInstance_Mutex");
-        if (singleInstanceMutex && GetLastError() == ERROR_ALREADY_EXISTS)
-        {
-            focusExistingMainWindow();
-            MessageBoxW(NULL, L"iFL03 is already running. Please first close the existing instance and try again.", L"iFL03", MB_OK | MB_ICONINFORMATION);
-            Logger::instance().logWarning("Second instance detected; exiting");
-            return 0;
-        }
-        if (!singleInstanceMutex)
-            logIfLastError("CreateMutexW");
+        MessageBoxW(NULL, L"iRonXtra is already running. Please first close the existing instance and try again.", L"iRonXtra", MB_OK | MB_ICONINFORMATION);
+        Logger::instance().logWarning("Second instance detected; exiting");
+        return 0;
     }
+    if (!singleInstanceMutex)
+        logIfLastError("CreateMutexW");
 
     // Bump priority up so we get time from the sim
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
@@ -361,19 +329,6 @@ int main()
         }
     }).detach();
 
-#ifdef IFL03_USE_CEF
-    const bool cefOk = cefInitialize();
-    if( cefOk )
-    {
-        Logger::instance().logInfo("CEF initialized successfully");
-        cefCreateMainWindow();
-    }
-    else
-    {
-        Logger::instance().logError("cefInitialize failed");
-    }
-#endif
-
     // Load the config and watch it for changes
     if (!g_cfg.load())
         Logger::instance().logWarning("Initial config load failed");
@@ -411,12 +366,13 @@ int main()
     // Register global hotkeys
     registerHotkeys();
 
-    printf("\n====================================================================================\n");
-    printf("Welcome to iFL03! This app provides a few simple overlays for iRacing.\n\n");
-    printf("Special thanks to lespalt for creating iRon, the original version of this app.\n\n");
-    printf("NOTE: The overlays can be activated in the menu or in the race via the \'config.json\' file.\n\n");
+    SetConsoleTitle("iRonXtra - hammer-is/iRonXtra");
+
+    printf("iRonXtra (%s %s) https://github.com/hammer-is/iRonXtra - overlays for iRacing running in windowed mode.\n\n",__DATE__,__TIME__);
+    printf("Special thanks to https://github.com/lespalt for creating iRon and https://github.com/SemSodermans31 for iFL03.\n\n");
     printf("Current hotkeys:\n");
     printf("    Move and resize overlays:     %s\n", g_cfg.getString("General","ui_edit_hotkey","").c_str() );
+    printf("    Toggle preview mode:          %s\n", g_cfg.getString("General","preview_hotkey", "").c_str());
     printf("    Toggle standings overlay:     %s\n", g_cfg.getString("OverlayStandings","toggle_hotkey","").c_str() );
     printf("    Toggle DDU overlay:           %s\n", g_cfg.getString("OverlayDDU","toggle_hotkey","").c_str() );
     printf("    Toggle Fuel overlay:          %s\n", g_cfg.getString("OverlayFuel","toggle_hotkey","").c_str() );
@@ -431,15 +387,7 @@ int main()
     printf("    Toggle track overlay:         %s\n", g_cfg.getString("OverlayTrack","toggle_hotkey","").c_str() );
     printf("    Toggle pit overlay:           %s\n", g_cfg.getString("OverlayPit","toggle_hotkey","").c_str() );
     printf("    Toggle traffic overlay:       %s\n", g_cfg.getString("OverlayTraffic","toggle_hotkey","").c_str() );
-    printf("\niFL03 will generate a file called \'config.json\' in its current directory. This file\n"\
-           "stores your settings. You can edit the file at any time, even while iFL03 is running,\n"\
-           "to customize your overlays and hotkeys.\n\n");
-    printf("To exit iFL03, simply close this console window.\n\n");
-    printf("For the best experience use the GUI format of the application.\n\n");
-    printf("For the latest version of the console application or to submit bug reports, go to:\n\n        https://github.com/lespalt/iRon\n\n");
-    printf("For the latest version of the GUI application, go to:\n\n        https://github.com/SemSodermans31/iFL03\n\n");
-    printf("\nHappy Racing!\n");
-    printf("====================================================================================\n\n");
+    printf("\nEdit \'config.json\' at any time to customize your overlays and hotkeys. Read 'logs.txt' for runtime info.\n\n");
 
     // Preload car brand icons once
     std::map<std::string, IWICFormatConverter*> carBrandIcons;
@@ -461,11 +409,7 @@ int main()
     overlays.push_back( new OverlayWeather() );
     overlays.push_back( new OverlayFlags() );
     overlays.push_back( new OverlayDelta() );
-#ifdef IFL03_USE_CEF
     overlays.push_back( new OverlayRadar() );
-#else
-    overlays.push_back( new OverlayRadar() );
-#endif
     overlays.push_back( new OverlayTrack() );
     overlays.push_back( new OverlayPit() );
     overlays.push_back( new OverlayTraffic() );
@@ -478,9 +422,6 @@ int main()
     unsigned          frameCnt = 0;
     bool              quitRequested = false;
 
-    // Expose pointers to bridge
-    app_register_bridge(&overlays, &uiEdit, &status, &handleConfigChange);
-
     while( true )
     {
         ConnectionStatus prevStatus       = status;
@@ -491,6 +432,10 @@ int main()
 
         // Refresh connection and session info
         status = ir_tick();
+#if defined(_DEBUG)
+        std::chrono::high_resolution_clock::time_point loopTimeStart = std::chrono::high_resolution_clock::now();
+        float loopTimeAvg = 0.0f;
+#endif
         const bool nowHasDriver = ir_hasValidDriver();
         const int  nowStatusID  = irsdkClient::instance().getStatusID();
         if( status != prevStatus )
@@ -503,14 +448,6 @@ int main()
 
             // Enable user-selected overlays, but only if we're driving
             handleConfigChange( overlays, status );
-
-#ifdef IFL03_USE_CEF
-            // Push status to GUI
-            if (cefOk) {
-                std::string js = std::string("window.onIFL03State && window.onIFL03State(") + app_get_state_json() + ");";
-                cefExecuteScript(js.c_str());
-            }
-#endif
         }
 
         if( ir_session.sessionType != prevSessionType || ir_session.subsessionId != prevSubsessionId )
@@ -599,12 +536,6 @@ int main()
                 }
                 handleConfigChange( overlays, status );
             }
-#ifdef IFL03_USE_CEF
-            if (cefOk) {
-                std::string js = std::string("window.onIFL03State && window.onIFL03State(") + app_get_state_json() + ");";
-                cefExecuteScript(js.c_str());
-            }
-#endif
         }
 
         // Message pump
@@ -623,8 +554,12 @@ int main()
                 if( msg.wParam == (int)Hotkey::UiEdit )
                 {
                     uiEdit = !uiEdit;
-                    for( Overlay* o : overlays )
-                        o->enableUiEdit( uiEdit );
+                    for (Overlay* o : overlays)
+                    {
+                        o->enableUiEdit(uiEdit);
+                        if (!uiEdit)
+							o->requestRedraw(); //need to redraw static overlays like cover to clear edit highlights
+                    }
 
                     if( !uiEdit )
                         giveFocusToIracing();
@@ -633,6 +568,9 @@ int main()
                 {
                     switch( msg.wParam )
                     {
+                    case (int)Hotkey::PreviewMode:
+						preview_mode_get() ? preview_mode_set(false) : preview_mode_set(true);
+                        break;
                     case (int)Hotkey::Standings:
                         g_cfg.setBool( "OverlayStandings", "enabled", !g_cfg.getBool("OverlayStandings","enabled",true) );
                         break;
@@ -694,15 +632,22 @@ int main()
         if( quitRequested )
             break;
 
-#ifdef IFL03_USE_CEF
-        // Allow CEF to process pending work when using the external pump
-        cefDoMessageLoopWork();
-#endif
-
         frameCnt++;
+
+#if defined(_DEBUG)
+        std::chrono::high_resolution_clock::time_point loopTimeEnd = std::chrono::high_resolution_clock::now();
+        long long loopTimeDiff = std::chrono::duration_cast<std::chrono::microseconds>(loopTimeEnd - loopTimeStart).count();
+
+        loopTimeAvg = (loopTimeAvg / 30.0f) * 29.0f + (float)loopTimeDiff / 30.0f;
+            
+        static int dbg_id = -1;        
+        dbg(dbg_id, float4(0.0f, 1.0f, 1.0f, 1.0f) , "Main                %5d (AVG: %5.0f) microseconds", loopTimeDiff, loopTimeAvg);
+
+        loopTimeStart = std::chrono::high_resolution_clock::now();
+#endif
     }
 
-    Logger::instance().logInfo("iFL03 shutting down");
+    Logger::instance().logInfo("iRonXtra shutting down");
     g_watchdogRunning = false;
     Logger::instance().flush();
 
@@ -717,15 +662,10 @@ int main()
     }
     carBrandIcons.clear();
 
-#ifdef IFL03_USE_CEF
-    cefShutdown();
-    Logger::instance().logInfo("CEF shutdown complete");
-#endif
-
     if (singleInstanceMutex)
         CloseHandle(singleInstanceMutex);
 
-    Logger::instance().logInfo("iFL03 shutting down cleanly");
+    Logger::instance().logInfo("iRonXtra shutting down cleanly");
     Logger::instance().flush();
 
     return 0;

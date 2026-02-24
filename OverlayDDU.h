@@ -33,6 +33,7 @@ SOFTWARE.
 #include "Config.h"
 #include "OverlayDebug.h"
 #include "stub_data.h"
+#include <cfloat>
 
 class OverlayDDU : public Overlay
 {
@@ -65,7 +66,7 @@ class OverlayDDU : public Overlay
 
         virtual float2 getDefaultSize()
         {
-            return float2(809,166);
+            return float2(800,165);
         }
 
         virtual void onEnable()
@@ -296,8 +297,6 @@ class OverlayDDU : public Overlay
             m_prevCurrentLap = currentLap;
             if( lapCountUpdated )
                 m_lastLapChangeTickCount = tickCount;
-
-            dbg( "isUnlimitedTime: %d, isUnlimitedLaps: %d, rem laps: %d, total laps: %d, rem time: %f", (int)ir_session.isUnlimitedTime, (int)ir_session.isUnlimitedLaps, ir_SessionLapsRemainEx.getInt(), ir_SessionLapsTotal.getInt(), ir_SessionTimeRemain.getFloat() );
 
             wchar_t s[512];
 
@@ -574,12 +573,9 @@ class OverlayDDU : public Overlay
                     
                     for( float v : m_fuelUsedLastLaps ) {
                         avgPerLap += v;
-                        dbg("%f",v);
                     }
                     if( !m_fuelUsedLastLaps.empty() )
                         avgPerLap /= (float)m_fuelUsedLastLaps.size();
-
-                    dbg( "valid fuel lap: %d", (int)m_isValidFuelLap );
                 }
 
                 // Persist a fresh average for this car/track combo once we have enough valid laps

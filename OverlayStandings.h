@@ -38,6 +38,7 @@ SOFTWARE.
 #include "OverlayDebug.h"
 #include "stub_data.h"
 #include "ClassColors.h"
+#include <cfloat>
 
 class OverlayStandings : public Overlay
 {
@@ -97,6 +98,11 @@ public:
     }
 
 protected:
+
+    virtual float2 getDefaultSize()
+    {
+        return float2(800, 320);
+    }
 
     virtual void onEnable()
     {

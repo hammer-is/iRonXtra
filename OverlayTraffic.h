@@ -51,7 +51,7 @@ protected:
     virtual float2 getDefaultSize()
     {
         // Compact warning card
-        return float2(520, 180);
+        return float2(350, 120);
     }
 
     virtual bool hasCustomBackground() { return true; }

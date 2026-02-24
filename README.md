@@ -1,57 +1,53 @@
-# iFL03 — modern iRacing overlays with intuitive UI <!-- omit in toc -->
+# iRonXtra — modern iRacing overlays
 
-iFL03 is a lightweight, modern overlay suite for iRacing. It offers a nice visual style, and a lot of customization while staying intuitive for the user.
+iRonXtra is a lightweight overlay suite for iRacing built in C++
 
-This is a continuation of L. E. Spalt’s iRon project. Many of the core ideas, rendering scaffolding, and the overall approach to simple, dependency‑light overlays originate there. I have then greatly expanded the project to feature things I thought were missing.
+This is a continuation of https://github.com/lespalt/iRon and https://github.com/SemSodermans31/iFL03
 
-So all in all a huge thanks to lespalt for the original work. iFL03 and its overlays are built upon that base. See Credits & License below.
-
-![Overview](assets/readmeimg/index.png)
-
-# Contents <!-- omit in toc -->
-
-- [Where to Download](#where-to-download)
-- [What’s New in iFL03](#whats-new-in-ifl03)
-- [Overlays](#overlays)
-  - [Relative](#relative)
-  - [Standings](#standings)
-  - [DDU (Dashboard)](#ddu-dashboard)
-  - [Inputs](#inputs)
-  - [Delta](#delta)
-  - [Flags](#flags)
-  - [Weather](#weather)
-  - [Track Map](#track-map)
-  - [Radar](#radar)
-  - [Cover](#cover)
-  - [Tire](#tire)
-  - [Fuel](#fuel)
-  - [Pitlane](#pitlane)
-- [Editing, Layout and Configuration](#editing-layout-and-configuration)
-- [CEF UI](#cef-ui)
-- [Installing & Running](#installing--running)
-- [Building from source](#building-from-source)
-- [Dependencies](#dependencies)
-- [Bug reports and feature requests](#bug-reports-and-feature-requests)
-- [Credits & License](#credits--license)
+This is a personal project and not affiliated with iRacing or its developers.
+It is provided as‑is without any warranty, and may break with future iRacing updates. Use at your own risk.
 
 ---
 
-## Where to Download
+## How to get started
 
 - Grab binaries from this repository’s Releases page.
-- Or visit my [website](https://semsodermans31.github.io/iFL03/)
+- Start iRonXtra.exe (iRacing does not have to be running yet).
+- Optionally use hotkey alt+p to toggle preview mode which should load up all overlays showing some dummy data.
+- Windows can be resized and positioned using the mouse in edit mode that can be toggled with alt+j
+- Further options can be found in config.json and it can be edited while iRonXtra is running.
+- iRacing has to be running in borderless‑window mode for iRonXtra to be able to draw on top.
 
 ---
 
-## What iFL03 contains
+## Building from source
 
-The application contains many useful overlays that most people cannot go without, requesting a now overlay or feature can be done via the issues tab in GitHub or via the [Discord](https://discord.gg/D6FGc9vA) Channel.
+- CMake https://cmake.org/download/
+- GCC https://code.visualstudio.com/docs/cpp/config-mingw
+- Windows SDK https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads
+- Visual Studio Code https://code.visualstudio.com/ and "C/C++ Extension Pack"
+
+---
+
+## Dependencies
+
+- Runtime: Only standard Windows components (Direct3D/Direct2D, DirectWrite, etc.).
+- Source: iRacing SDK, picojson, and minimal helper code included in this repository.
+
+---
+
+## Credits & License
+
+- iRonXtra is based on iRon by L. E. Spalt (lespalt).
+- This is a fork of https://github.com/SemSodermans31/iFL03 with improvements and additions.
+- License: MIT (see LICENSE). Please retain copyright notices in source files.
 
 ---
 
 ## Overlays
 
-![Overlays Overview](assets/readmeimg/overlays.png)
+Below is a list of the main overlays included in iRonXtra, each with a screenshot and a some of the features available.
+Examine and edit config.json for more info.
 
 ### Relative
 
@@ -101,6 +97,7 @@ Compact dashboard with everything you’d otherwise flip through in black boxes:
 
 Pedal traces and steering visualization for driving consistency work:
 - Scrolling throttle and brake traces (configurable thickness/colors)
+- ABS brake trace and extra visual indicator when active as background of overlay turns yellow (can be turned off if too distracting)
 - Vertical percentage bars for clutch, brake, throttle with numeric readouts
 - Steering indicator: ring + rotating column or an image wheel (Moza KS / RS v2)
 - On‑wheel speed and gear when using the built‑in ring
@@ -190,98 +187,3 @@ Displays handy information when driving into the pitlane.
 - In pitlane it shows speed and distance to pitbox
 
 ![pitlane](assets/readmeimg/pit.png)
-
----
-
-## Editing, Layout and Configuration using the GUI
-
-- Preview Mode: In the settings in the GUI toggle the switch on.
-- Hotkeys: Overlays can be toggled at runtime (see overlays menu for hotkey combination). Hotkeys are configurable.
-- Live config: Most colors, fonts, sizes and behavior can be tuned in the generated config.json if you wish to totally customize your experience, this requires a bit of technical knowhow :P. Edits are applied live when you save.
-
----
-
-## CEF Settings UI
-
-iFL03 ships with an embedded Chromium UI for a friendlier setup experience. Use it to:
-- Toggle overlays on/off and adjust per‑overlay options
-- Change fonts, sizes, spacing and colors
-- Preview and fine‑tune positions and global opacity
-
-If you prefer, all settings remain available via config.json without opening the UI.
-
-![Preview Mode](assets/readmeimg/previewmode.png)
-
-![Settings UI](assets/readmeimg/settings.png)
-
-![User Settings](assets/readmeimg/usersettings.png)
-
----
-
-## Installing & Running
-
-- Install via the installer in the releases tab please do this in any writable folder (so iFL03 can save config.json).
-- Run iFL03 before or after launching iRacing; overlays will appear once you’re in the car and standings as you are in the menu.
-- Borderless‑window mode in iRacing is recommended. Other modes may work but are less tested.
-
----
-
-## Building from source
-
-Prerequisits:
-- Visual Studio 2022
-- CEF can be downloaded [here](https://cef-builds.spotifycdn.com/cef_binary_144.0.12%2Bg1a1008c%2Bchromium-144.0.7559.110_windows64.tar.bz2)
-- You may need the standard DirectX SDK components that ship with Visual Studio.
-- CMake should be installed (also added to your environment variables)
-
-- Unzip the CEF folder, rename it to simply (cef_full_buildnumber for example /cef_binary_139.0.17+g6c347eb+chromium-139.0.7258.31_windows64) and place it somewhere you can read and write to it.
-- create a seperate folder next to the cef_buildnumber folder named cef_build. Then run the following CMake command:
-    `cmake -S "C:\YOUR_PATH\cef\cef_full_buildnumber" -B "C:\YOUR_PATH\cef\cef_build" -G "Visual Studio 17 2022" -A x64 -DCEF_RUNTIME_LIBRARY_FLAG=/MD`
-    
-- This creates a cef.sln inside the cef_build folder. After, run the following command to create a build from the cef.sln:
-    `cmake --build "C:\YOUR_PATH\cef\cef_build" --config Release --target libcef_dll_wrapper`
-    
-- Now you have created the necessary cef files to run the project. 
-- In the project repo after opening and running the ifl03.sln file. It creates a Release folder. In this Release folder add the following files from the /cef_full_buildnumber/Resources folder:
-  - locales folder
-  - chrome_100_percent.pak
-  - chrome_200_percent.pak
-  - resources.pak
-  - icudtl.dat
-
-- From /cef_full_buildnumber/Release folder add: 
-  - chrome_elf.dll
-  - d3dcompiler_47.dll
-  - libcef.dll
-  - libEGL.dll
-  - libGLESv2.dll
-  - v8_context_snapshot.bin
-  - vk_swiftshader_icd.json
-
-This now should allow you to run the overlay application from Visual Studio 2022 in Release mode.
-
----
-
-## Dependencies
-
-- Runtime: Only standard Windows components (Direct3D/Direct2D, DirectWrite, etc.).
-- Source: iRacing SDK, picojson, and minimal helper code included in this repository.
-
----
-
-## Bug reports and feature requests
-
-Please open an issue in this repository. Reproduced steps and logs/screenshots help a lot, same goes for feature requests. I will try to implement all features requested if they are a logical improvement to the overlay application.
-
----
-
-## Credits & License
-
-- iFL03 is based on iRon by L. E. Spalt (lespalt). The rendering architecture and many overlay ideas come from that project. The CEF GUI builds on that foundation. Thank you!
-- License: MIT (see LICENSE). Please retain copyright notices in source files.
-
-
-## Donations
-
-If you like this project enough to wonder whether you can contribute financially: first of all, thank you! Make sure to also checkout lesphalt's repo/github to show some appreciation. you can support me (only if you really want to) using this [link](https://paypal.me/sems0drmans). If not **please 
-consider giving to any charities of your choosing instead**.

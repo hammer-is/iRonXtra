@@ -53,6 +53,11 @@ class OverlayRelative : public Overlay
 
         enum class Columns { POSITION, CAR_NUMBER, NAME, POSITIONS_GAINED, DELTA, LICENSE, SAFETY_RATING, IRATING, IR_PRED, PIT, LAST, TIRE_COMPOUND };
 
+        virtual float2 getDefaultSize()
+        {
+            return float2(600, 200);
+        }
+
         std::string tireCompoundToString(int compound) const
         {
             switch (compound)

@@ -67,7 +67,10 @@ protected:
 
     virtual bool hasCustomBackground() { return true; }
 
-    virtual float2 getDefaultSize() { return float2(320, 320); }
+    virtual float2 getDefaultSize() 
+    { 
+        return float2(350, 160);
+    }
 
     virtual void onUpdate()
     {

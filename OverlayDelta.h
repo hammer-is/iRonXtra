@@ -517,7 +517,7 @@ protected:
 
     virtual float2 getDefaultSize()
     {
-        return float2(600, 180);
+        return float2(470, 150);
     }
 
     virtual bool hasCustomBackground()

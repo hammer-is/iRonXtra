@@ -551,8 +551,8 @@ class OverlayWeather : public Overlay
         static std::wstring ow_resolveAssetPath(const std::wstring& relative)
         {
             const std::wstring exeDir = ow_getExecutableDirW();
-            // Candidate 1: repo root two levels up from exe dir (mirrors GUI HTML loader)
-            std::wstring candidateRepo = exeDir + L"\\..\\..\\" + relative;
+            // Candidate 1: repo root three levels up from exe dir
+            std::wstring candidateRepo = exeDir + L"\\..\\..\\..\\" + relative;
             if (ow_fileExistsW(candidateRepo)) return candidateRepo;
             // Candidate 2: next to the executable
             std::wstring candidateLocal = exeDir + L"\\" + relative;

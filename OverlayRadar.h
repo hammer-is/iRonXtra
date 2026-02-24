@@ -456,7 +456,7 @@ class OverlayRadar : public Overlay
 
         virtual float2 getDefaultSize()
         {
-            return float2(180, 180);
+            return float2(200, 200);
         }
 
         virtual bool hasCustomBackground()

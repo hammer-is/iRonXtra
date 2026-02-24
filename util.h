@@ -224,7 +224,7 @@ inline bool directoryExistsW(const std::wstring& path)
 inline std::wstring resolveAssetPathW(const std::wstring& relative)
 {
     const std::wstring exeDir = getExecutableDirW();
-    std::wstring repo = exeDir + L"\\..\\..\\" + relative;
+    std::wstring repo = exeDir + L"\\..\\..\\..\\" + relative;
     if (directoryExistsW(repo)) return repo;
     std::wstring local = exeDir + L"\\" + relative;
     if (directoryExistsW(local)) return local;

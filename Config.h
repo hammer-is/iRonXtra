@@ -51,6 +51,7 @@ class Config
         void                        watchForChanges();
         bool                        hasChanged();
 
+        bool                        hasValue( const std::string& component, const std::string& key );
         bool                        getBool( const std::string& component, const std::string& key, bool defaultVal );
         int                         getInt( const std::string& component, const std::string& key, int defaultVal );
         float                       getFloat( const std::string& component, const std::string& key, float defaultVal );

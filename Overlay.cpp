@@ -29,6 +29,7 @@ SOFTWARE.
 #include "Config.h"
 #include "Logger.h"
 #include <string>
+#include "OverlayDebug.h"
 
 using namespace Microsoft::WRL;
 
@@ -160,7 +161,7 @@ void Overlay::enable( bool on )
 
         // DXGI factory
         ComPtr<IDXGIFactory2> dxgiFactory;
-        HRCHECK(CreateDXGIFactory2( isdebug ? DXGI_CREATE_FACTORY_DEBUG : 0, IID_PPV_ARGS(&dxgiFactory) ));
+        HRCHECK(CreateDXGIFactory2( /* isdebug ? DXGI_CREATE_FACTORY_DEBUG : */ 0, IID_PPV_ARGS(&dxgiFactory) )); //Unsure why this broke while changing to GCC
 
         // DXGI Swap chain
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -182,7 +183,7 @@ void Overlay::enable( bool on )
         // D2D factory
         D2D1_FACTORY_OPTIONS factoryOptions = {};
         factoryOptions.debugLevel = isdebug ? D2D1_DEBUG_LEVEL_INFORMATION : D2D1_DEBUG_LEVEL_NONE;
-        HRCHECK(D2D1CreateFactory( D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(m_d2dFactory), &factoryOptions, &m_d2dFactory ));
+        HRCHECK(D2D1CreateFactory( D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), &factoryOptions, &m_d2dFactory ));
 
         // D2D render target
         D2D1_RENDER_TARGET_PROPERTIES targetProperties = {};
@@ -253,20 +254,92 @@ void Overlay::configChanged()
     if( !m_enabled )
         return;
 
-    // Somewhat silly way to ensure the default positions of the overlays aren't all on top of each other.
-    const unsigned hash = MurmurHash2(m_name.c_str(),(int)m_name.length(),0x1234);
-    const int defaultX = (hash % 100) * 15;
-    const int defaultY = (hash % 80) * 10;
+    if (!g_cfg.hasValue(m_name, "window_pos_x"))
+    {
+        // First time enabling this overlay, calculate a non-overlapping default position and save to config
 
-    const float2 defaultSize = getDefaultSize();
+        // Get screen dimensions
+        const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+        const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-    // Position/dimensions might have changed
-    const int x = g_cfg.getInt(m_name,"window_pos_x", defaultX);
-    const int y = g_cfg.getInt(m_name,"window_pos_y", defaultY);
-    const int w = g_cfg.getInt(m_name,"window_size_x", (int)defaultSize.x);
-    const int h = g_cfg.getInt(m_name,"window_size_y", (int)defaultSize.y);
-    setWindowPosAndSize( x, y, w, h );
-    applyPositionSetting();
+        // Get default size of the overlay
+        const float2 defaultSize = getDefaultSize();
+        const int windowWidth = static_cast<int>(defaultSize.x);
+        const int windowHeight = static_cast<int>(defaultSize.y);
+
+        // Static list to store positions and sizes of all overlays
+        static std::vector<RECT> overlayPositions;
+
+        // Find the best position for the new overlay
+        RECT newOverlay = { 0, 0, windowWidth, windowHeight };
+        bool positionFound = false;
+
+        for (int y = 0; y + windowHeight <= screenHeight; y++)
+        {
+            for (int x = 0; x + windowWidth <= screenWidth; x++)
+            {
+                // Check if the current position overlaps with any existing overlay
+                RECT candidate = { x, y, x + windowWidth, y + windowHeight };
+                bool overlaps = false;
+
+                for (const RECT& existing : overlayPositions)
+                {
+                    if (candidate.left < existing.right && candidate.right > existing.left &&
+                        candidate.top < existing.bottom && candidate.bottom > existing.top)
+                    {
+                        overlaps = true;
+                        break;
+                    }
+                }
+
+                if (!overlaps)
+                {
+                    newOverlay = candidate;
+                    positionFound = true;
+                    break;
+                }
+            }
+
+            if (positionFound)
+                break;
+        }
+
+        // If no position is found, stack overlays at the top-left corner
+        if (!positionFound)
+        {
+            newOverlay.left = 0;
+            newOverlay.top = 0;
+        }
+        else
+        { 
+            // Save the new overlay position and size
+            overlayPositions.push_back(newOverlay);
+        }
+
+        // Retrieve position and size from the configuration or use defaults
+        const int x = g_cfg.getInt(m_name, "window_pos_x", newOverlay.left);
+        const int y = g_cfg.getInt(m_name, "window_pos_y", newOverlay.top);
+        const int w = g_cfg.getInt(m_name, "window_size_x", windowWidth);
+        const int h = g_cfg.getInt(m_name, "window_size_y", windowHeight);
+
+        // Apply the calculated position and size
+        setWindowPosAndSize(x, y, w, h);
+
+        // Save the new position
+        saveWindowPosAndSize();
+    }
+    else
+    {
+        // Subsequent enables, just apply the saved position and size
+
+        const int x = g_cfg.getInt(m_name, "window_pos_x", 0);
+        const int y = g_cfg.getInt(m_name, "window_pos_y", 0);
+        const int w = g_cfg.getInt(m_name, "window_size_x", 100);
+        const int h = g_cfg.getInt(m_name, "window_size_y", 100);
+
+        // Apply the fetched position and size
+        setWindowPosAndSize(x, y, w, h);
+    }
 
     onConfigChanged();
     requestRedraw();
@@ -283,6 +356,10 @@ void Overlay::update()
     if( !m_enabled )
         return;
 
+#if defined(_DEBUG)
+    loopTimeStart = std::chrono::high_resolution_clock::now();
+#endif
+
     // Lightweight frame limiter to reduce CPU pressure when nothing urgent
     // Default 60 FPS, configurable via config per overlay name: target_fps
     const int cfgFps = std::max( 10, g_cfg.getInt(m_name, "target_fps", m_targetFPS) );
@@ -292,7 +369,7 @@ void Overlay::update()
     if( !m_forceNextUpdate && (now - m_lastUpdateTick) < minDelta )
         return;
     m_lastUpdateTick = now;
-    if( m_staticMode && !m_forceNextUpdate )
+    if( m_staticMode && !m_forceNextUpdate && !m_uiEditEnabled)
         return;
     m_forceNextUpdate = false;
 
@@ -327,18 +404,60 @@ void Overlay::update()
     {
         // Draw highlight frame and resize corner indicators
         m_renderTarget->BeginDraw();
-        D2D1_ROUNDED_RECT rr;
-        rr.rect = { 0.5f, 0.5f, w-0.5f, h-0.5f };
-        rr.radiusX = cornerRadius;
-        rr.radiusY = cornerRadius;
-        m_brush->SetColor( float4(1,1,1,0.7f) );
-        m_renderTarget->DrawRoundedRectangle( &rr, m_brush.Get(), 2 );
-        m_renderTarget->DrawLine( float2(w-0.5f,h-0.5f-ResizeBorderWidth), float2(w-0.5f-ResizeBorderWidth,h-0.5f-ResizeBorderWidth), m_brush.Get(), 2 );
-        m_renderTarget->DrawLine( float2(w-0.5f-ResizeBorderWidth,h-0.5f), float2(w-0.5f-ResizeBorderWidth,h-0.5f-ResizeBorderWidth), m_brush.Get(), 2 );
+
+        auto drawMulticolorDots = [&](const float2& a, const float2& b, float spacing, float radius)
+        {
+            const float dx = b.x - a.x;
+            const float dy = b.y - a.y;
+            const float len = sqrtf(dx * dx + dy * dy);
+            if (len <= 0.0001f) return;
+            const float ux = dx / len;
+            const float uy = dy / len;
+            int idx = 0;
+            for (float d = 0.0f; d <= len; d += spacing)
+            {
+                const float px = a.x + ux * d;
+                const float py = a.y + uy * d;
+
+				// alternate colors for better visibility on different backgrounds
+                if ((idx & 1) == 0)
+                    m_brush->SetColor(float4(0, 0, 0, 1.0f)); // black                
+                else
+                    m_brush->SetColor(float4(1.0f, 1.0f, 1.0f, 0.95f)); // white
+
+                D2D1_ELLIPSE ell = D2D1::Ellipse(D2D1::Point2F(px, py), radius, radius);
+                m_renderTarget->FillEllipse(&ell, m_brush.Get());
+                ++idx;
+            }
+        };
+
+		drawMulticolorDots(float2(1.0f, 1.0f), float2(w - 1.0f, 1.0f), 5.0f, 2.0f); //upper edge
+        drawMulticolorDots(float2(1.0f, 1.0f), float2(1.0f, h - 1.0f), 5.0f, 2.0f); //left edge        
+        drawMulticolorDots(float2(1.0f, h - 1.0f), float2(w - 1.0f, h - 1.0f), 5.0f, 2.0f); //lower edge
+        drawMulticolorDots(float2(w - 1.0f, 1.0f), float2(w - 1.0f, h - 1.0f), 5.0f, 2.0f); //right edge
+
+		drawMulticolorDots(float2(w - ResizeBorderWidth, h - ResizeBorderWidth), float2(w - 1.0f, h - ResizeBorderWidth), 5.0f, 2.0f); //horizontal resize edge
+		drawMulticolorDots(float2(w - ResizeBorderWidth, h - ResizeBorderWidth), float2(w - ResizeBorderWidth, h - 1.0f), 5.0f, 2.0f); //vertical resize edge
+
         m_renderTarget->EndDraw();
     }
 
     HRCHECK(m_swapChain->Present( 1, 0 ));
+
+#if defined(_DEBUG)
+    std::chrono::high_resolution_clock::time_point loopTimeEnd = std::chrono::high_resolution_clock::now();
+    long long loopTimeDiff = std::chrono::duration_cast<std::chrono::microseconds>(loopTimeEnd - loopTimeStart).count();
+
+    loopTimeAvg = (loopTimeAvg / 30.0f) * 29.0f + (float)loopTimeDiff / 30.0f;
+    
+    std::string n_name = m_name;
+    if (n_name.size() < 20)
+        n_name.append(20 - n_name.size(), ' ');
+
+    dbg(m_dbgLineId, "%s%5d (AVG: %5.0f) microseconds", n_name.c_str(), loopTimeDiff, loopTimeAvg);
+
+    loopTimeStart = std::chrono::high_resolution_clock::now();
+#endif
 }
 
 void Overlay::setWindowPosAndSize( int x, int y, int w, int h, bool callSetWindowPos )
@@ -376,7 +495,7 @@ void Overlay::saveWindowPosAndSize()
     g_cfg.setInt( m_name, "window_size_y", m_height  );
     
     // When user manually moves overlay, switch to custom position
-    g_cfg.setString( m_name, "position", "custom" );
+    //g_cfg.setString( m_name, "position", "custom" );
 
     if (!g_cfg.save())
     {
@@ -397,59 +516,6 @@ bool Overlay::canEnableWhileDisconnected() const
 float Overlay::getGlobalOpacity() const
 {
     return g_cfg.getFloat( m_name, "opacity", 100.0f ) / 100.0f;
-}
-
-void Overlay::applyPositionSetting()
-{
-    std::string position = g_cfg.getString( m_name, "position", "custom" );
-    
-    if (position == "custom") {
-        // Use existing saved position, don't change anything
-        return;
-    }
-    
-    // Get screen dimensions for positioning
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-    
-    int newX = m_xpos;
-    int newY = m_ypos;
-    
-    // Apply position setting
-    if (position == "top-left") {
-        newX = 50;
-        newY = 50;
-    } else if (position == "top-center") {
-        newX = (screenWidth - m_width) / 2;
-        newY = 50;
-    } else if (position == "top-right") {
-        newX = screenWidth - m_width - 50;
-        newY = 50;
-    } else if (position == "center-left") {
-        newX = 50;
-        newY = (screenHeight - m_height) / 2;
-    } else if (position == "center") {
-        newX = (screenWidth - m_width) / 2;
-        newY = (screenHeight - m_height) / 2;
-    } else if (position == "center-right") {
-        newX = screenWidth - m_width - 50;
-        newY = (screenHeight - m_height) / 2;
-    } else if (position == "bottom-left") {
-        newX = 50;
-        newY = screenHeight - m_height - 100;
-    } else if (position == "bottom-center") {
-        newX = (screenWidth - m_width) / 2;
-        newY = screenHeight - m_height - 100;
-    } else if (position == "bottom-right") {
-        newX = screenWidth - m_width - 50;
-        newY = screenHeight - m_height - 100;
-    }
-    
-    // Apply the new position
-    setWindowPosAndSize(newX, newY, m_width, m_height);
-    
-    // Save the new position
-    saveWindowPosAndSize();
 }
 
 void Overlay::onEnable() {}

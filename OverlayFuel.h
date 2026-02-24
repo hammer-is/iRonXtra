@@ -49,7 +49,10 @@ public:
 #endif
 
 protected:
-	virtual float2 getDefaultSize() { return float2(350, 300); }
+	virtual float2 getDefaultSize()
+	{ 
+		return float2(250, 400); 
+	}
 
 	virtual void onEnable()
 	{
