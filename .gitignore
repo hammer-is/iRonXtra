@@ -1,10 +1,10 @@
 iron.vcxproj.user
 .cmake/
 .vscode/
-build/
 out/
 sessionYaml.txt
 config.json
+*.bak
 
 # Existing ignores
 .gitignore
