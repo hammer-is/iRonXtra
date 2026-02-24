@@ -253,20 +253,92 @@ void Overlay::configChanged()
     if( !m_enabled )
         return;
 
-    // Somewhat silly way to ensure the default positions of the overlays aren't all on top of each other.
-    const unsigned hash = MurmurHash2(m_name.c_str(),(int)m_name.length(),0x1234);
-    const int defaultX = (hash % 100) * 15;
-    const int defaultY = (hash % 80) * 10;
+    if (!g_cfg.hasValue(m_name, "window_pos_x"))
+    {
+        // First time enabling this overlay, calculate a non-overlapping default position and save to config
 
-    const float2 defaultSize = getDefaultSize();
+        // Get screen dimensions
+        const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+        const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-    // Position/dimensions might have changed
-    const int x = g_cfg.getInt(m_name,"window_pos_x", defaultX);
-    const int y = g_cfg.getInt(m_name,"window_pos_y", defaultY);
-    const int w = g_cfg.getInt(m_name,"window_size_x", (int)defaultSize.x);
-    const int h = g_cfg.getInt(m_name,"window_size_y", (int)defaultSize.y);
-    setWindowPosAndSize( x, y, w, h );
-    applyPositionSetting();
+        // Get default size of the overlay
+        const float2 defaultSize = getDefaultSize();
+        const int windowWidth = static_cast<int>(defaultSize.x);
+        const int windowHeight = static_cast<int>(defaultSize.y);
+
+        // Static list to store positions and sizes of all overlays
+        static std::vector<RECT> overlayPositions;
+
+        // Find the best position for the new overlay
+        RECT newOverlay = { 0, 0, windowWidth, windowHeight };
+        bool positionFound = false;
+
+        for (int y = 0; y + windowHeight <= screenHeight; y++)
+        {
+            for (int x = 0; x + windowWidth <= screenWidth; x++)
+            {
+                // Check if the current position overlaps with any existing overlay
+                RECT candidate = { x, y, x + windowWidth, y + windowHeight };
+                bool overlaps = false;
+
+                for (const RECT& existing : overlayPositions)
+                {
+                    if (candidate.left < existing.right && candidate.right > existing.left &&
+                        candidate.top < existing.bottom && candidate.bottom > existing.top)
+                    {
+                        overlaps = true;
+                        break;
+                    }
+                }
+
+                if (!overlaps)
+                {
+                    newOverlay = candidate;
+                    positionFound = true;
+                    break;
+                }
+            }
+
+            if (positionFound)
+                break;
+        }
+
+        // If no position is found, stack overlays at the top-left corner
+        if (!positionFound)
+        {
+            newOverlay.left = 0;
+            newOverlay.top = 0;
+        }
+        else
+        { 
+            // Save the new overlay position and size
+            overlayPositions.push_back(newOverlay);
+        }
+
+        // Retrieve position and size from the configuration or use defaults
+        const int x = g_cfg.getInt(m_name, "window_pos_x", newOverlay.left);
+        const int y = g_cfg.getInt(m_name, "window_pos_y", newOverlay.top);
+        const int w = g_cfg.getInt(m_name, "window_size_x", windowWidth);
+        const int h = g_cfg.getInt(m_name, "window_size_y", windowHeight);
+
+        // Apply the calculated position and size
+        setWindowPosAndSize(x, y, w, h);
+
+        // Save the new position
+        saveWindowPosAndSize();
+    }
+    else
+    {
+        // Subsequent enables, just apply the saved position and size
+
+        const int x = g_cfg.getInt(m_name, "window_pos_x", 0);
+        const int y = g_cfg.getInt(m_name, "window_pos_y", 0);
+        const int w = g_cfg.getInt(m_name, "window_size_x", 100);
+        const int h = g_cfg.getInt(m_name, "window_size_y", 100);
+
+        // Apply the fetched position and size
+        setWindowPosAndSize(x, y, w, h);
+    }
 
     onConfigChanged();
     requestRedraw();
@@ -376,7 +448,7 @@ void Overlay::saveWindowPosAndSize()
     g_cfg.setInt( m_name, "window_size_y", m_height  );
     
     // When user manually moves overlay, switch to custom position
-    g_cfg.setString( m_name, "position", "custom" );
+    //g_cfg.setString( m_name, "position", "custom" );
 
     if (!g_cfg.save())
     {
@@ -397,59 +469,6 @@ bool Overlay::canEnableWhileDisconnected() const
 float Overlay::getGlobalOpacity() const
 {
     return g_cfg.getFloat( m_name, "opacity", 100.0f ) / 100.0f;
-}
-
-void Overlay::applyPositionSetting()
-{
-    std::string position = g_cfg.getString( m_name, "position", "custom" );
-    
-    if (position == "custom") {
-        // Use existing saved position, don't change anything
-        return;
-    }
-    
-    // Get screen dimensions for positioning
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-    
-    int newX = m_xpos;
-    int newY = m_ypos;
-    
-    // Apply position setting
-    if (position == "top-left") {
-        newX = 50;
-        newY = 50;
-    } else if (position == "top-center") {
-        newX = (screenWidth - m_width) / 2;
-        newY = 50;
-    } else if (position == "top-right") {
-        newX = screenWidth - m_width - 50;
-        newY = 50;
-    } else if (position == "center-left") {
-        newX = 50;
-        newY = (screenHeight - m_height) / 2;
-    } else if (position == "center") {
-        newX = (screenWidth - m_width) / 2;
-        newY = (screenHeight - m_height) / 2;
-    } else if (position == "center-right") {
-        newX = screenWidth - m_width - 50;
-        newY = (screenHeight - m_height) / 2;
-    } else if (position == "bottom-left") {
-        newX = 50;
-        newY = screenHeight - m_height - 100;
-    } else if (position == "bottom-center") {
-        newX = (screenWidth - m_width) / 2;
-        newY = screenHeight - m_height - 100;
-    } else if (position == "bottom-right") {
-        newX = screenWidth - m_width - 50;
-        newY = screenHeight - m_height - 100;
-    }
-    
-    // Apply the new position
-    setWindowPosAndSize(newX, newY, m_width, m_height);
-    
-    // Save the new position
-    saveWindowPosAndSize();
 }
 
 void Overlay::onEnable() {}

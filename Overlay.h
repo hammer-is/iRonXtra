@@ -68,7 +68,6 @@ class Overlay
         void            handleMouseWheel( int delta, int x, int y ) { onMouseWheel( delta, x, y ); }
 
         float           getGlobalOpacity() const;
-        void            applyPositionSetting();
 
         int             getX() const { return m_xpos; }
         int             getY() const { return m_ypos; }

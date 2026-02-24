@@ -122,7 +122,17 @@ bool Config::hasChanged()
     return m_hasChanged;
 }
 
-bool Config::getBool( const std::string& component, const std::string& key, bool defaultVal )
+bool Config::hasValue(const std::string &component, const std::string &key)
+{
+        auto compIt = m_pj.find(component);
+        if (compIt == m_pj.end())
+            return false;
+        const picojson::object& compObj = compIt->second.get<picojson::object>();
+        auto keyIt = compObj.find(key);
+        return keyIt != compObj.end();
+}
+
+bool Config::getBool(const std::string &component, const std::string &key, bool defaultVal)
 {
     bool existed = false;
     picojson::value& value = getOrInsertValue( component, key, &existed );
