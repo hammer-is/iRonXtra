@@ -60,8 +60,6 @@ SOFTWARE.
 #include "OverlayTire.h"
 #include "OverlayPit.h"
 #include "OverlayTraffic.h"
-#include "GuiCEF.h"
-#include "AppControl.h"
 #include "preview_mode.h"
 
 // Helper: determine if this process is a CEF sub-process (renderer/gpu/utility)
@@ -361,19 +359,6 @@ int main()
         }
     }).detach();
 
-#ifdef IFL03_USE_CEF
-    const bool cefOk = cefInitialize();
-    if( cefOk )
-    {
-        Logger::instance().logInfo("CEF initialized successfully");
-        cefCreateMainWindow();
-    }
-    else
-    {
-        Logger::instance().logError("cefInitialize failed");
-    }
-#endif
-
     // Load the config and watch it for changes
     if (!g_cfg.load())
         Logger::instance().logWarning("Initial config load failed");
@@ -461,11 +446,7 @@ int main()
     overlays.push_back( new OverlayWeather() );
     overlays.push_back( new OverlayFlags() );
     overlays.push_back( new OverlayDelta() );
-#ifdef IFL03_USE_CEF
     overlays.push_back( new OverlayRadar() );
-#else
-    overlays.push_back( new OverlayRadar() );
-#endif
     overlays.push_back( new OverlayTrack() );
     overlays.push_back( new OverlayPit() );
     overlays.push_back( new OverlayTraffic() );
@@ -477,9 +458,6 @@ int main()
     bool              uiEdit   = false;
     unsigned          frameCnt = 0;
     bool              quitRequested = false;
-
-    // Expose pointers to bridge
-    app_register_bridge(&overlays, &uiEdit, &status, &handleConfigChange);
 
     while( true )
     {
@@ -503,14 +481,6 @@ int main()
 
             // Enable user-selected overlays, but only if we're driving
             handleConfigChange( overlays, status );
-
-#ifdef IFL03_USE_CEF
-            // Push status to GUI
-            if (cefOk) {
-                std::string js = std::string("window.onIFL03State && window.onIFL03State(") + app_get_state_json() + ");";
-                cefExecuteScript(js.c_str());
-            }
-#endif
         }
 
         if( ir_session.sessionType != prevSessionType || ir_session.subsessionId != prevSubsessionId )
@@ -599,12 +569,6 @@ int main()
                 }
                 handleConfigChange( overlays, status );
             }
-#ifdef IFL03_USE_CEF
-            if (cefOk) {
-                std::string js = std::string("window.onIFL03State && window.onIFL03State(") + app_get_state_json() + ");";
-                cefExecuteScript(js.c_str());
-            }
-#endif
         }
 
         // Message pump
@@ -694,11 +658,6 @@ int main()
         if( quitRequested )
             break;
 
-#ifdef IFL03_USE_CEF
-        // Allow CEF to process pending work when using the external pump
-        cefDoMessageLoopWork();
-#endif
-
         frameCnt++;
     }
 
@@ -716,11 +675,6 @@ int main()
         if (it.second) it.second->Release();
     }
     carBrandIcons.clear();
-
-#ifdef IFL03_USE_CEF
-    cefShutdown();
-    Logger::instance().logInfo("CEF shutdown complete");
-#endif
 
     if (singleInstanceMutex)
         CloseHandle(singleInstanceMutex);

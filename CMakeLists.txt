@@ -3,9 +3,7 @@ project(iRonXtra LANGUAGES CXX)
 
 add_executable(iRonXtra
     iFL03.rc
-    AppControl.cpp
     Config.cpp
-    GuiCEF.cpp
     iracing.cpp
     Logger.cpp
     main.cpp
@@ -13,7 +11,6 @@ add_executable(iRonXtra
     OverlayDebug.cpp
     preview_mode.cpp
     stub_data.cpp
-    WinMainShim.cpp
     irsdk/irsdk_client.cpp
     irsdk/irsdk_utils.cpp
     irsdk/yaml_parser.cpp
