@@ -298,8 +298,6 @@ class OverlayDDU : public Overlay
             if( lapCountUpdated )
                 m_lastLapChangeTickCount = tickCount;
 
-            dbg( "isUnlimitedTime: %d, isUnlimitedLaps: %d, rem laps: %d, total laps: %d, rem time: %f", (int)ir_session.isUnlimitedTime, (int)ir_session.isUnlimitedLaps, ir_SessionLapsRemainEx.getInt(), ir_SessionLapsTotal.getInt(), ir_SessionTimeRemain.getFloat() );
-
             wchar_t s[512];
 
             m_renderTarget->BeginDraw();
@@ -575,12 +573,9 @@ class OverlayDDU : public Overlay
                     
                     for( float v : m_fuelUsedLastLaps ) {
                         avgPerLap += v;
-                        dbg("%f",v);
                     }
                     if( !m_fuelUsedLastLaps.empty() )
                         avgPerLap /= (float)m_fuelUsedLastLaps.size();
-
-                    dbg( "valid fuel lap: %d", (int)m_isValidFuelLap );
                 }
 
                 // Persist a fresh average for this car/track combo once we have enough valid laps
