@@ -97,6 +97,7 @@ static void focusExistingMainWindow()
 enum class Hotkey
 {
     UiEdit,
+    PreviewMode,
     Standings,
     DDU,
     Fuel,
@@ -116,6 +117,7 @@ enum class Hotkey
 static void registerHotkeys()
 {
     UnregisterHotKey( NULL, (int)Hotkey::UiEdit );
+    UnregisterHotKey( NULL, (int)Hotkey::PreviewMode);
     UnregisterHotKey( NULL, (int)Hotkey::Standings );
     UnregisterHotKey( NULL, (int)Hotkey::DDU );
     UnregisterHotKey( NULL, (int)Hotkey::Fuel );
@@ -134,8 +136,11 @@ static void registerHotkeys()
 
     UINT vk, mod;
 
-    if( parseHotkey( g_cfg.getString("General","ui_edit_hotkey","alt-j"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("General","ui_edit_hotkey","alt+j"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::UiEdit, mod, vk );
+
+    if (parseHotkey(g_cfg.getString("General", "preview_hotkey", "alt+p"), &mod, &vk))
+        RegisterHotKey(NULL, (int)Hotkey::PreviewMode, mod, vk);
 
     if( parseHotkey( g_cfg.getString("OverlayStandings","toggle_hotkey","ctrl+1"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Standings, mod, vk );
@@ -143,37 +148,37 @@ static void registerHotkeys()
     if( parseHotkey( g_cfg.getString("OverlayDDU","toggle_hotkey","ctrl+2"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::DDU, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayFuel","toggle_hotkey","ctrl+2"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayFuel","toggle_hotkey","ctrl+3"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Fuel, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayTire","toggle_hotkey","ctrl+3"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayTire","toggle_hotkey","ctrl+4"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Tire, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayInputs","toggle_hotkey","ctrl+4"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayInputs","toggle_hotkey","ctrl+5"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Inputs, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayRelative","toggle_hotkey","ctrl+5"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayRelative","toggle_hotkey","ctrl+6"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Relative, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayCover","toggle_hotkey","ctrl+6"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayCover","toggle_hotkey","ctrl+7"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Cover, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayWeather","toggle_hotkey","ctrl+7"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayWeather","toggle_hotkey","ctrl+8"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Weather, mod, vk );
     
-    if( parseHotkey( g_cfg.getString("OverlayFlags","toggle_hotkey","ctrl+8"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayFlags","toggle_hotkey","ctrl+9"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Flags, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayDelta","toggle_hotkey","ctrl+9"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayDelta","toggle_hotkey","ctrl+0"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Delta, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayRadar","toggle_hotkey","ctrl+0"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayRadar","toggle_hotkey","ctrl+shift+1"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Radar, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayTrack","toggle_hotkey","ctrl+shift+1"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayTrack","toggle_hotkey","ctrl+shift+2"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Track, mod, vk );
 
-    if( parseHotkey( g_cfg.getString("OverlayPit","toggle_hotkey","ctrl+shift+2"),&mod,&vk) )
+    if( parseHotkey( g_cfg.getString("OverlayPit","toggle_hotkey","ctrl+shift+3"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Pit, mod, vk );
     
     if( parseHotkey( g_cfg.getString("OverlayTraffic","toggle_hotkey","ctrl+shift+4"),&mod,&vk) )
@@ -402,6 +407,7 @@ int main()
     printf("NOTE: The overlays can be activated in the menu or in the race via the \'config.json\' file.\n\n");
     printf("Current hotkeys:\n");
     printf("    Move and resize overlays:     %s\n", g_cfg.getString("General","ui_edit_hotkey","").c_str() );
+    printf("    Toggle preview mode:          %s\n", g_cfg.getString("General","preview_hotkey", "").c_str());
     printf("    Toggle standings overlay:     %s\n", g_cfg.getString("OverlayStandings","toggle_hotkey","").c_str() );
     printf("    Toggle DDU overlay:           %s\n", g_cfg.getString("OverlayDDU","toggle_hotkey","").c_str() );
     printf("    Toggle Fuel overlay:          %s\n", g_cfg.getString("OverlayFuel","toggle_hotkey","").c_str() );
@@ -597,6 +603,9 @@ int main()
                 {
                     switch( msg.wParam )
                     {
+                    case (int)Hotkey::PreviewMode:
+						preview_mode_get() ? preview_mode_set(false) : preview_mode_set(true);
+                        break;
                     case (int)Hotkey::Standings:
                         g_cfg.setBool( "OverlayStandings", "enabled", !g_cfg.getBool("OverlayStandings","enabled",true) );
                         break;
