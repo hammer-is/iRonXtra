@@ -226,8 +226,13 @@ float StubDataManager::getStubThrottle()
 float StubDataManager::getStubBrake()
 {
     float throttle = getStubThrottle();
-    float brake = throttle < 0.4f ? (0.8f - throttle * 1.5f) : 0.0f;
+    float brake = throttle < 0.4f ? (1.5f - throttle * 2.5f) : 0.0f;
     return std::max(0.0f, std::min(1.0f, brake));
+}
+
+bool StubDataManager::getStubAbs()
+{
+	return getStubBrake() > 0.8f ? true : false; // ABS active when braking hard
 }
 
 float StubDataManager::getStubClutch()

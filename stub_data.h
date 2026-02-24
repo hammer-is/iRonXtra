@@ -77,6 +77,7 @@ public:
     // Inputs-specific stub data
     static float getStubThrottle();
     static float getStubBrake();
+    static bool getStubAbs();
     static float getStubClutch();
     static float getStubSteering();
 

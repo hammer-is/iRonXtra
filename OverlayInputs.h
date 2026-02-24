@@ -62,11 +62,12 @@ class OverlayInputs : public Overlay
         {
             m_showSteeringWheel = g_cfg.getBool( m_name, "show_steering_wheel", true );
             m_showGhost = g_cfg.getBool( m_name, "show_ghost_data", false );
+            m_showClutch = g_cfg.getBool(m_name, "show_clutch", true);
             m_selectedGhostFile = g_cfg.getString("General", "ghost_telemetry_file", "");
 
-            const float wheelFrac = m_showSteeringWheel ? 0.2f : 0.0f;
-            const float barFrac = m_showSteeringWheel ? 0.16f : 0.26f;
-            const float graphFrac = std::max(0.1f, 1.0f - wheelFrac - barFrac);
+            const float wheelFrac = m_showSteeringWheel ? 0.2f : 0.0f;            
+            const float barFrac = (m_showSteeringWheel ? 0.20f : 0.25f) * (m_showClutch ? 1 : 2.0f / 3.0f);
+            const float graphFrac = 1.0f - wheelFrac - barFrac;
 
             const int horizontalWidthInt = std::max(1, (int)(m_width * graphFrac));
             m_throttleVtx.resize( horizontalWidthInt );
@@ -117,9 +118,8 @@ class OverlayInputs : public Overlay
             const float h = (float)m_height;
 
             // Layout sections
-            const bool showWheel = m_showSteeringWheel;
-            const float wheelFrac = showWheel ? 0.2f : 0.0f;
-            const float barFrac = showWheel ? 0.15f : 0.3f;
+            const float wheelFrac = m_showSteeringWheel ? h / w : 0.0f;
+            const float barFrac = (m_showSteeringWheel ? 0.20f : 0.25f) * (m_showClutch ? 1 : 2.0f / 3.0f);
             const float graphFrac = 1.0f - wheelFrac - barFrac;
 
             const float horizontalWidth = w * graphFrac;
@@ -128,15 +128,12 @@ class OverlayInputs : public Overlay
 
             const bool leftSide = g_cfg.getBool( m_name, "left_side", false );
 
-            const float horizontalPadding = 8.0f; // Padding from overlay edge for horizontal graphs
-            const float sectionPadding = 8.0f; // Padding between sections
-            const float horizontalStartX = leftSide ? (wheelWidth + barsWidth) : horizontalPadding;
-            const float barsStartX = leftSide ? wheelWidth : horizontalWidth;
+            const float sectionPadding = h * 0.1f; //based on height to keep the graph section horizontal and vertical padding in sync
+            const float horizontalStartX = (leftSide ? wheelWidth + barsWidth : sectionPadding); // Padding before graph area in right-side mode. 
+            const float barsStartX = (leftSide ? wheelWidth : horizontalWidth);
             const float wheelStartX = leftSide ? 0.0f : (horizontalWidth + barsWidth);
 
-            // Adjust horizontal end to leave room for bars when not in left-side mode
-            const float horizontalEndX = leftSide ? (horizontalStartX + horizontalWidth) :
-                std::min(horizontalStartX + horizontalWidth, barsStartX - sectionPadding);
+            const float horizontalEndX = horizontalStartX + horizontalWidth - sectionPadding;
 
             // Calculate effective width for vertex arrays and scaling
             const float effectiveHorizontalWidth = horizontalEndX - horizontalStartX;
@@ -153,7 +150,7 @@ class OverlayInputs : public Overlay
             const bool useStubData = StubDataManager::shouldUseStubData();
             const float currentThrottle = useStubData ? StubDataManager::getStubThrottle() : ir_Throttle.getFloat();
             const float currentBrake = useStubData ? StubDataManager::getStubBrake() : ir_Brake.getFloat();
-            const bool absActive = useStubData ? false : ir_BrakeABSactive.getBool();
+            const bool absActive = useStubData ? StubDataManager::getStubAbs(): ir_BrakeABSactive.getBool();
             const float currentSteeringAngle = useStubData ?
                 (StubDataManager::getStubSteering() - 0.5f) * 2.0f * 3.14159f * 0.25f :
                 ir_SteeringWheelAngle.getFloat();
@@ -229,7 +226,7 @@ class OverlayInputs : public Overlay
                     m_ghostSteeringVtx[(int)m_ghostSteeringVtx.size()-1].y = ghostSteerNorm;
             }
 
-            const float thickness = g_cfg.getFloat( m_name, "line_thickness", 2.0f );
+            const float thickness = g_cfg.getFloat( m_name, "line_thickness", 4.0f );
             
             // Transform function for horizontal graphs
             auto vtx2coord = [&]( const float2& v )->float2 {
@@ -242,7 +239,14 @@ class OverlayInputs : public Overlay
             m_renderTarget->Clear( float4(0,0,0,0) );
             {
                 const float cornerRadius = g_cfg.getFloat( m_name, "corner_radius", 2.0f );
-                float4 bgColor = g_cfg.getFloat4( m_name, "background_col", float4(0.0f, 0.0f, 0.0f, 1.0f) );
+
+                float4 bgColor = g_cfg.getFloat4(m_name, "background_col", float4(0.0f, 0.0f, 0.0f, 1.0f));
+
+                if (g_cfg.getBool(m_name, "abs_background", true))
+                    if (!m_brakeAbsFlags.empty())
+                        if (m_brakeAbsFlags[(int)m_brakeAbsFlags.size() - 1] == 1u)
+                            bgColor = g_cfg.getFloat4(m_name, "abs_col", float4(1.0f, 0.85f, 0.20f, 0.95f));				
+                        
                 bgColor.w *= getGlobalOpacity();
 
                 const float left   = 0.5f;
@@ -250,7 +254,7 @@ class OverlayInputs : public Overlay
                 const float right  = w - 0.5f;
                 const float bottom = h - 0.5f;
 
-                if( !showWheel )
+                if( !m_showSteeringWheel )
                 {
                     m_brush->SetColor( bgColor );
                     D2D1_ROUNDED_RECT rr = { D2D1::RectF(left, top, right, bottom), cornerRadius, cornerRadius };
@@ -511,14 +515,12 @@ class OverlayInputs : public Overlay
                 }
 
                 // Draw live lines on top
-                m_brush->SetColor( g_cfg.getFloat4( m_name, "throttle_col", float4(0.38f,0.91f,0.31f,0.8f) ) );
+                m_brush->SetColor(g_cfg.getFloat4( m_name, "throttle_col", float4(0.38f, 0.91f, 0.31f, 0.8f)));
                 m_renderTarget->DrawGeometry( throttleLinePath.Get(), m_brush.Get(), thickness );
 				// Draw brake with persistent colors: orange where ABS was active, red otherwise
-				const float4 brakeColAbs = float4(1.0f, 0.85f, 0.20f, 0.95f);
-				const float4 brakeColOff = g_cfg.getFloat4( m_name, "brake_col", float4(0.93f,0.03f,0.13f,0.8f) );
-				m_brush->SetColor( brakeColOff );
+				m_brush->SetColor(g_cfg.getFloat4(m_name, "brake_col", float4(0.93f, 0.03f, 0.13f, 0.8f)));
 				m_renderTarget->DrawGeometry( brakeAbsOffPath.Get(), m_brush.Get(), thickness );
-				m_brush->SetColor( brakeColAbs );
+				m_brush->SetColor(g_cfg.getFloat4(m_name, "abs_col", float4(1.0f, 0.85f, 0.20f, 0.95f)));
 				m_renderTarget->DrawGeometry( brakeAbsOnPath.Get(), m_brush.Get(), thickness );
 
                 // Optional steering angle line (white)
@@ -540,10 +542,10 @@ class OverlayInputs : public Overlay
             }
 
             // SECTION 2: Vertical Percentage Bars
-            const float barWidth = barsWidth / 3.0f;
+            const float barWidth = m_showClutch ? barsWidth / 4.5f : barsWidth / 3.0f;
             const float barHeight = h * 0.65f;
             const float barY = h * 0.25f;
-            
+
             const float clutchValue = useStubData ? StubDataManager::getStubClutch() : (1.0f - ir_Clutch.getFloat());
             const float brakeValue = currentBrake;
             const float throttleValue = currentThrottle;
@@ -554,21 +556,27 @@ class OverlayInputs : public Overlay
                 float4 color;
                 float x;
             };
-            
+
             BarInfo bars[] = {
-                { clutchValue, float4(0.0f, 0.5f, 1.0f, 0.8f), barsStartX + barWidth * 0.5f },
-                { brakeValue, float4(0.93f, 0.03f, 0.13f, 0.8f), barsStartX + barWidth * 1.5f },
-                { throttleValue, float4(0.38f, 0.91f, 0.31f, 0.8f), barsStartX + barWidth * 2.5f }
+                { clutchValue, g_cfg.getFloat4(m_name, "clutch_col", float4(0.0f, 0.5f, 1.0f, 0.8f)), barsStartX + (barsWidth / 6.0f) * 1.2f },
+                { brakeValue, g_cfg.getFloat4(m_name, "brake_col", float4(0.93f, 0.03f, 0.13f, 0.8f)), barsStartX + (m_showClutch ? (barsWidth / 6.0f) * 3.0f : (barsWidth / 4.0f) * 1.13f)},
+                { throttleValue, g_cfg.getFloat4(m_name, "throttle_col", float4(0.38f, 0.91f, 0.31f, 0.8f)), barsStartX + (m_showClutch ? (barsWidth / 6.0f) * 4.8f : (barsWidth / 4.0f) * 2.87f)}
             };
-            
-            for( int i = 0; i < 3; ++i )
+            /*
+            static int dbgId2 = -1;
+            if (dbgId2 < 0)
+                dbgId2 = dbgLineId();
+            dbg(dbgId2, "barsStartX %f\tbarsWidth %f\tbarWidth %f\tclutch %f\tbrake %f\tthrottle %f", barsStartX, barsWidth, barWidth, bars[0].x, bars[1].x, bars[2].x);
+            */
+            for( int i = (m_showClutch ? 0 : 1); i < 3; ++i )
             {
                 const BarInfo& bar = bars[i];
                 
                 // Draw bar background
                 const float borderPx = 1.0f;
                 m_brush->SetColor( float4(0.2f, 0.2f, 0.2f, 0.8f) );
-                D2D1_RECT_F bgRect = { bar.x - barWidth*0.3f, barY, bar.x + barWidth*0.3f, barY + barHeight };
+                D2D1_RECT_F bgRect; 
+                bgRect = { bar.x - barWidth * 0.5f, barY, bar.x + barWidth * 0.5f, barY + barHeight };
                 m_renderTarget->FillRectangle( bgRect, m_brush.Get() );
                 
                 // Draw bar fill first (slightly inset), then border on top so fill never appears wider
@@ -592,12 +600,12 @@ class OverlayInputs : public Overlay
                 m_renderTarget->DrawText( percentText, (UINT)wcslen(percentText), m_textFormatPercent.Get(), &percentRect, m_brush.Get(), D2D1_DRAW_TEXT_OPTIONS_CLIP );
             }
 
-            if( showWheel )
+            if( m_showSteeringWheel )
             {
                 // SECTION 3: Steering Wheel with Speed/Gear or Image
                 const float wheelCenterX = wheelStartX + wheelWidth * 0.5f;
                 const float wheelCenterY = h * 0.5f;
-                const float wheelRadius = std::min(wheelWidth, h * 0.5f) * 0.9f;
+                const float wheelRadius = std::min(wheelWidth * 0.5f, h * 0.5f) * 0.9f;
                 const float innerRadius = wheelRadius * 0.8f;
 
                 const std::string wheelMode = g_cfg.getString(m_name, "steering_wheel", "builtin");
@@ -719,6 +727,7 @@ class OverlayInputs : public Overlay
         Microsoft::WRL::ComPtr<ID2D1Bitmap> m_wheelBitmap;
         bool m_showSteeringWheel = true;
         bool m_showGhost = false;
+        bool m_showClutch = true;
 
         struct GhostSample { float lapPct; float throttle; float brake; float steerAngle; };
         std::vector<GhostSample> m_ghostSamples;
@@ -748,7 +757,7 @@ class OverlayInputs : public Overlay
             };
             auto resolveAssetPath = [&](const std::wstring& relative) -> std::wstring {
                 const std::wstring exeDir = getExecutableDirW();
-                std::wstring repo = exeDir + L"\\..\\..\\..\\" + relative;
+                std::wstring repo = exeDir + L"\\..\\..\\" + relative;
                 if (fileExistsW(repo)) return repo;
                 std::wstring local = exeDir + L"\\" + relative;
                 if (fileExistsW(local)) return local;
