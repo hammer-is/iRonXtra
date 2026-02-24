@@ -44,7 +44,7 @@ protected:
 
 	virtual float2 getDefaultSize()
 	{
-		return float2(640, 220);
+		return float2(250, 140);
 	}
 
 	virtual void onEnable()

@@ -67,7 +67,7 @@ class OverlayTire : public Overlay
 
         virtual float2 getDefaultSize()
         {
-            return float2(640, 240);
+            return float2(600, 300);
         }
 
         virtual void onEnable()

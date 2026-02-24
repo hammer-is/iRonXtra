@@ -66,7 +66,7 @@ class OverlayDDU : public Overlay
 
         virtual float2 getDefaultSize()
         {
-            return float2(809,166);
+            return float2(800,165);
         }
 
         virtual void onEnable()

@@ -99,6 +99,11 @@ public:
 
 protected:
 
+    virtual float2 getDefaultSize()
+    {
+        return float2(800, 320);
+    }
+
     virtual void onEnable()
     {
         onConfigChanged();  // trigger font load

@@ -55,7 +55,7 @@ class OverlayInputs : public Overlay
 
         virtual float2 getDefaultSize()
         {
-            return float2(600,200);
+            return float2(500,100);
         }
 
         virtual void onConfigChanged()
