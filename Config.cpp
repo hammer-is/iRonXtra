@@ -31,24 +31,44 @@ SOFTWARE.
 
 Config              g_cfg;
 
-static void configWatcher( std::atomic<bool>* m_hasChanged )
+
+static void configWatcher(std::atomic<bool>* m_hasChanged)
 {
-    HANDLE dir = CreateFile( ".", FILE_LIST_DIRECTORY, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
-    if( dir == INVALID_HANDLE_VALUE )
+    HANDLE dir = CreateFile(".", FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (dir == INVALID_HANDLE_VALUE)
     {
-        printf( "Could not start config watch thread.\n" );
+        printf("Could not start config watch thread.\n");
         return;
     }
 
-    std::vector<DWORD> buf( 1024*1024 );
+    std::vector<BYTE> buf(1024 * 1024); // Use BYTE instead of DWORD for proper buffer alignment
     DWORD bytesReturned = 0;
 
-    while( true )
-    {        
-        if( ReadDirectoryChangesW( dir, buf.data(), (DWORD)buf.size()/sizeof(DWORD), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL ) )
+    while (true)
+    {
+        if (ReadDirectoryChangesW(dir, buf.data(), static_cast<DWORD>(buf.size()), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL))
         {
-            Sleep( 100 ); 
-            *m_hasChanged = true;
+            const char* base = reinterpret_cast<const char*>(buf.data());
+            DWORD offset = 0;
+
+            while (offset < bytesReturned)
+            {
+                const FILE_NOTIFY_INFORMATION* fni = reinterpret_cast<const FILE_NOTIFY_INFORMATION*>(base + offset);
+
+                // Convert the filename from WCHAR to std::wstring
+                std::wstring wfilename(fni->FileName, fni->FileNameLength / sizeof(WCHAR));
+                std::string filename(wfilename.begin(), wfilename.end());
+
+				// Don't trigger on changes to logs.txt to avoid infinite loops when logging config changes
+                if (filename != "logs.txt" && filename != "sessionYaml.txt")
+                    *m_hasChanged = true;
+
+                if (fni->NextEntryOffset == 0)
+                    break;
+                offset += fni->NextEntryOffset;
+            }
+
+            Sleep(100);
         }
     }
 }
@@ -272,7 +292,10 @@ bool Config::loadCarConfig( const std::string& carName )
 {
     std::string carFilename = getCarConfigFilename(carName);
     std::string json;
-    
+
+	// Reset change flag before loading, so that we don't trigger on changes that were made while the config was not loaded yet (e.g. by the config watcher thread)
+    m_hasChanged = false;
+
     // Try to load car-specific config
     if( !loadFile(carFilename, json) )
     {
@@ -296,7 +319,6 @@ bool Config::loadCarConfig( const std::string& carName )
     m_pj = pjval.get<picojson::object>();
     m_filename = carFilename;
     m_currentCarName = carName;
-    m_hasChanged = false;
     return true;
 }
 
