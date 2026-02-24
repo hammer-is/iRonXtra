@@ -36,12 +36,18 @@ struct DbgLine
 };
 
 static std::vector<DbgLine> g_dbgLines;
+static int g_lineNumber;
 
-void dbg( const float4& color, const char* fmt, ... )
+void dbg( int &lineNumber, const float4& color, const char* fmt, ... )
 {
 #ifndef _DEBUG
     return;
 #endif
+    if (lineNumber < 0)
+        lineNumber++; //make value available to caller for next call
+    
+    if (lineNumber >= (int)g_dbgLines.size())
+        g_dbgLines.resize(lineNumber + 1);
 
     va_list args;
     va_start( args, fmt );
@@ -52,16 +58,21 @@ void dbg( const float4& color, const char* fmt, ... )
     DbgLine line;
     line.s = s;
     line.col = color;
-    g_dbgLines.emplace_back( line );
+    g_dbgLines[lineNumber] = line;
 
     va_end( args );
 }
 
-void dbg( const char* fmt, ... )
+void dbg( int &lineNumber, const char* fmt, ... )
 {
 #ifndef _DEBUG
     return;
 #endif
+    if (lineNumber < 0)
+        lineNumber = g_lineNumber++; //make value available to caller for next call
+    
+    if (g_lineNumber >= (int)g_dbgLines.size())
+        g_dbgLines.resize(g_lineNumber + 1);
 
     va_list args;
     va_start( args, fmt );
@@ -72,7 +83,7 @@ void dbg( const char* fmt, ... )
     DbgLine line;
     line.s = s;
     line.col = float4(1,1,1,0.9f);
-    g_dbgLines.emplace_back( line );
+    g_dbgLines[lineNumber] = line;
 
     va_end( args );
 }

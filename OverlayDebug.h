@@ -28,8 +28,8 @@ SOFTWARE.
 #include "util.h"
 
 
-void dbg( const float4& color, const char* fmt, ... );
-void dbg( const char* fmt, ... );
+void dbg( int &lineNumber, const float4& color, const char* fmt, ... );
+void dbg( int &lineNumber, const char* fmt, ... );
 
 class OverlayDebug : public Overlay
 {
