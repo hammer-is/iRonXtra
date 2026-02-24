@@ -401,10 +401,10 @@ int main()
     // Register global hotkeys
     registerHotkeys();
 
-    printf("\n====================================================================================\n");
-    printf("Welcome to iRonXtra! This app provides a few simple overlays for iRacing.\n\n");
-    printf("Special thanks to lespalt for creating iRon, the original version of this app.\n\n");
-    printf("NOTE: The overlays can be activated in the menu or in the race via the \'config.json\' file.\n\n");
+    SetConsoleTitle("iRonXtra - hammer-is/iRonXtra");
+
+    printf("iRonXtra (%s %s) https://github.com/hammer-is/iRonXtra - overlays for iRacing running in windowed mode.\n\n",__DATE__,__TIME__);
+    printf("Special thanks to https://github.com/lespalt for creating iRon and https://github.com/SemSodermans31 for iFL03.\n\n");
     printf("Current hotkeys:\n");
     printf("    Move and resize overlays:     %s\n", g_cfg.getString("General","ui_edit_hotkey","").c_str() );
     printf("    Toggle preview mode:          %s\n", g_cfg.getString("General","preview_hotkey", "").c_str());
@@ -422,15 +422,7 @@ int main()
     printf("    Toggle track overlay:         %s\n", g_cfg.getString("OverlayTrack","toggle_hotkey","").c_str() );
     printf("    Toggle pit overlay:           %s\n", g_cfg.getString("OverlayPit","toggle_hotkey","").c_str() );
     printf("    Toggle traffic overlay:       %s\n", g_cfg.getString("OverlayTraffic","toggle_hotkey","").c_str() );
-    printf("\niRonXtra will generate a file called \'config.json\' in its current directory. This file\n"\
-           "stores your settings. You can edit the file at any time, even while iRonXtra is running,\n"\
-           "to customize your overlays and hotkeys.\n\n");
-    printf("To exit iRonXtra, simply close this console window.\n\n");
-    printf("For the best experience use the GUI format of the application.\n\n");
-    printf("For the latest version of the console application or to submit bug reports, go to:\n\n        https://github.com/lespalt/iRon\n\n");
-    printf("For the latest version of the GUI application, go to:\n\n        https://github.com/SemSodermans31/iRonXtra\n\n");
-    printf("\nHappy Racing!\n");
-    printf("====================================================================================\n\n");
+    printf("\nEdit \'config.json\' at any time to customize your overlays and hotkeys. Read 'logs.txt' for runtime info.\n\n");
 
     // Preload car brand icons once
     std::map<std::string, IWICFormatConverter*> carBrandIcons;
