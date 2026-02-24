@@ -6,8 +6,8 @@ IDI_ICON1 ICON "icon.ico"
 
 // Version information
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 0,0,0,7
-PRODUCTVERSION 0,0,0,7
+FILEVERSION 0,0,0,1
+PRODUCTVERSION 0,0,0,1
 FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 FILEFLAGS 0x0L
 FILEOS VOS__WINDOWS32
@@ -18,13 +18,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "iFL03 Overlay"
-            VALUE "FileDescription", "iFL03 Overlay Application"
-            VALUE "FileVersion", "0.0.0.7"
-            VALUE "InternalName", "ifl03.exe"
-            VALUE "OriginalFilename", "ifl03.exe"
-            VALUE "ProductName", "iFL03 Overlay"
-            VALUE "ProductVersion", "0.0.0.7"
+            VALUE "CompanyName", "iRonXtra Overlay"
+            VALUE "FileDescription", "iRonXtra Overlay Application"
+            VALUE "FileVersion", "0.0.0.1"
+            VALUE "InternalName", "iRonXtra.exe"
+            VALUE "OriginalFilename", "iRonXtra.exe"
+            VALUE "ProductName", "iRonXtra Overlay"
+            VALUE "ProductVersion", "0.0.0.1"
         END
     END
     BLOCK "VarFileInfo"

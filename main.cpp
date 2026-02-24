@@ -86,7 +86,7 @@ static bool isCefSubprocess()
 // Bring an already running main window to the foreground if we can find it
 static void focusExistingMainWindow()
 {
-    HWND hwnd = FindWindowW(L"iFL03GuiWindow", NULL);
+    HWND hwnd = FindWindowW(L"iRonXtraGuiWindow", NULL);
     if (hwnd)
     {
         ShowWindow(hwnd, SW_SHOWNORMAL);
@@ -269,17 +269,17 @@ static DWORD g_lastConfigReloadLogTick = 0;
 
 int main()
 {
-    Logger::instance().logInfo("iFL03 starting");
+    Logger::instance().logInfo("iRonXtra starting");
 
     // Single-instance guard for the main/browser process only (skip CEF sub-processes)
     HANDLE singleInstanceMutex = NULL;
     if (!isCefSubprocess())
     {
-        singleInstanceMutex = CreateMutexW(NULL, TRUE, L"Global\\iFL03_SingleInstance_Mutex");
+        singleInstanceMutex = CreateMutexW(NULL, TRUE, L"Global\\iRonXtra_SingleInstance_Mutex");
         if (singleInstanceMutex && GetLastError() == ERROR_ALREADY_EXISTS)
         {
             focusExistingMainWindow();
-            MessageBoxW(NULL, L"iFL03 is already running. Please first close the existing instance and try again.", L"iFL03", MB_OK | MB_ICONINFORMATION);
+            MessageBoxW(NULL, L"iRonXtra is already running. Please first close the existing instance and try again.", L"iRonXtra", MB_OK | MB_ICONINFORMATION);
             Logger::instance().logWarning("Second instance detected; exiting");
             return 0;
         }
@@ -397,7 +397,7 @@ int main()
     registerHotkeys();
 
     printf("\n====================================================================================\n");
-    printf("Welcome to iFL03! This app provides a few simple overlays for iRacing.\n\n");
+    printf("Welcome to iRonXtra! This app provides a few simple overlays for iRacing.\n\n");
     printf("Special thanks to lespalt for creating iRon, the original version of this app.\n\n");
     printf("NOTE: The overlays can be activated in the menu or in the race via the \'config.json\' file.\n\n");
     printf("Current hotkeys:\n");
@@ -416,13 +416,13 @@ int main()
     printf("    Toggle track overlay:         %s\n", g_cfg.getString("OverlayTrack","toggle_hotkey","").c_str() );
     printf("    Toggle pit overlay:           %s\n", g_cfg.getString("OverlayPit","toggle_hotkey","").c_str() );
     printf("    Toggle traffic overlay:       %s\n", g_cfg.getString("OverlayTraffic","toggle_hotkey","").c_str() );
-    printf("\niFL03 will generate a file called \'config.json\' in its current directory. This file\n"\
-           "stores your settings. You can edit the file at any time, even while iFL03 is running,\n"\
+    printf("\niRonXtra will generate a file called \'config.json\' in its current directory. This file\n"\
+           "stores your settings. You can edit the file at any time, even while iRonXtra is running,\n"\
            "to customize your overlays and hotkeys.\n\n");
-    printf("To exit iFL03, simply close this console window.\n\n");
+    printf("To exit iRonXtra, simply close this console window.\n\n");
     printf("For the best experience use the GUI format of the application.\n\n");
     printf("For the latest version of the console application or to submit bug reports, go to:\n\n        https://github.com/lespalt/iRon\n\n");
-    printf("For the latest version of the GUI application, go to:\n\n        https://github.com/SemSodermans31/iFL03\n\n");
+    printf("For the latest version of the GUI application, go to:\n\n        https://github.com/SemSodermans31/iRonXtra\n\n");
     printf("\nHappy Racing!\n");
     printf("====================================================================================\n\n");
 
@@ -661,7 +661,7 @@ int main()
         frameCnt++;
     }
 
-    Logger::instance().logInfo("iFL03 shutting down");
+    Logger::instance().logInfo("iRonXtra shutting down");
     g_watchdogRunning = false;
     Logger::instance().flush();
 
@@ -679,7 +679,7 @@ int main()
     if (singleInstanceMutex)
         CloseHandle(singleInstanceMutex);
 
-    Logger::instance().logInfo("iFL03 shutting down cleanly");
+    Logger::instance().logInfo("iRonXtra shutting down cleanly");
     Logger::instance().flush();
 
     return 0;

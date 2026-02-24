@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 project(iRonXtra LANGUAGES CXX)
 
 add_executable(iRonXtra
-    iFL03.rc
+    iRonXtra.rc
     Config.cpp
     iracing.cpp
     Logger.cpp

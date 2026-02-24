@@ -84,7 +84,7 @@ bool Config::save()
     if( !ok ) {
         char s[1024];
         GetCurrentDirectory( sizeof(s), s );
-        printf("Could not save config file! Please make sure iFL03 is started from a directory for which it has write permissions. The current directory is: %s.\n", s);
+        printf("Could not save config file! Please make sure iRonXtra is started from a directory for which it has write permissions. The current directory is: %s.\n", s);
         std::string msg = "Could not save config file (" + m_filename + ") from directory " + s;
         Logger::instance().logError(msg);
     }
@@ -309,7 +309,7 @@ bool Config::saveCarConfig( const std::string& carName )
     if( !ok ) {
         char s[1024];
         GetCurrentDirectory( sizeof(s), s );
-        printf("Could not save car config file! Please make sure iFL03 is started from a directory for which it has write permissions. The current directory is: %s.\n", s);
+        printf("Could not save car config file! Please make sure iRonXtra is started from a directory for which it has write permissions. The current directory is: %s.\n", s);
     }
     return ok;
 }
