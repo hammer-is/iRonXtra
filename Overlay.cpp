@@ -399,14 +399,41 @@ void Overlay::update()
     {
         // Draw highlight frame and resize corner indicators
         m_renderTarget->BeginDraw();
-        D2D1_ROUNDED_RECT rr;
-        rr.rect = { 0.5f, 0.5f, w-0.5f, h-0.5f };
-        rr.radiusX = cornerRadius;
-        rr.radiusY = cornerRadius;
-        m_brush->SetColor( float4(1,1,1,0.7f) );
-        m_renderTarget->DrawRoundedRectangle( &rr, m_brush.Get(), 2 );
-        m_renderTarget->DrawLine( float2(w-0.5f,h-0.5f-ResizeBorderWidth), float2(w-0.5f-ResizeBorderWidth,h-0.5f-ResizeBorderWidth), m_brush.Get(), 2 );
-        m_renderTarget->DrawLine( float2(w-0.5f-ResizeBorderWidth,h-0.5f), float2(w-0.5f-ResizeBorderWidth,h-0.5f-ResizeBorderWidth), m_brush.Get(), 2 );
+
+        auto drawMulticolorDots = [&](const float2& a, const float2& b, float spacing, float radius)
+        {
+            const float dx = b.x - a.x;
+            const float dy = b.y - a.y;
+            const float len = sqrtf(dx * dx + dy * dy);
+            if (len <= 0.0001f) return;
+            const float ux = dx / len;
+            const float uy = dy / len;
+            int idx = 0;
+            for (float d = 0.0f; d <= len; d += spacing)
+            {
+                const float px = a.x + ux * d;
+                const float py = a.y + uy * d;
+
+				// alternate colors for better visibility on different backgrounds
+                if ((idx & 1) == 0)
+                    m_brush->SetColor(float4(0, 0, 0, 1.0f)); // black                
+                else
+                    m_brush->SetColor(float4(1.0f, 1.0f, 1.0f, 0.95f)); // white
+
+                D2D1_ELLIPSE ell = D2D1::Ellipse(D2D1::Point2F(px, py), radius, radius);
+                m_renderTarget->FillEllipse(&ell, m_brush.Get());
+                ++idx;
+            }
+        };
+
+		drawMulticolorDots(float2(1.0f, 1.0f), float2(w - 1.0f, 1.0f), 5.0f, 2.0f); //upper edge
+        drawMulticolorDots(float2(1.0f, 1.0f), float2(1.0f, h - 1.0f), 5.0f, 2.0f); //left edge        
+        drawMulticolorDots(float2(1.0f, h - 1.0f), float2(w - 1.0f, h - 1.0f), 5.0f, 2.0f); //lower edge
+        drawMulticolorDots(float2(w - 1.0f, 1.0f), float2(w - 1.0f, h - 1.0f), 5.0f, 2.0f); //right edge
+
+		drawMulticolorDots(float2(w - ResizeBorderWidth, h - ResizeBorderWidth), float2(w - 1.0f, h - ResizeBorderWidth), 5.0f, 2.0f); //horizontal resize edge
+		drawMulticolorDots(float2(w - ResizeBorderWidth, h - ResizeBorderWidth), float2(w - ResizeBorderWidth, h - 1.0f), 5.0f, 2.0f); //vertical resize edge
+
         m_renderTarget->EndDraw();
     }
 
