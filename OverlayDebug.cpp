@@ -124,8 +124,6 @@ void OverlayDebug::onUpdate()
     }
 
     m_renderTarget->EndDraw();
-
-    g_dbgLines.clear();
 }
 
 bool OverlayDebug::canEnableWhileNotDriving() const
