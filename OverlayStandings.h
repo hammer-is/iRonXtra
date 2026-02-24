@@ -916,7 +916,7 @@ protected:
                     }
                     else
                     {
-                        swprintf(s, _countof(s), L"#%S", car.carNumberStr.c_str());
+                        swprintf(s, _countof(s), L"#%s", car.carNumberStr.c_str());
                         r = { xoff + clm->textL, rowY - lineHeight / 2, xoff + clm->textR, rowY + lineHeight / 2 };
                         rr.rect = { r.left - 2, r.top + 1, r.right + 2, r.bottom - 1 };
                         rr.radiusX = 3;
@@ -953,7 +953,7 @@ protected:
                             displayName = displayName.substr(0, spacePos);
                         }
                     }
-                    swprintf(s, _countof(s), L"%S", displayName.c_str());
+                    swprintf(s, _countof(s), L"%s", displayName.c_str());
                     m_text.render(m_renderTarget.Get(), s, m_textFormat.Get(), xoff + clm->textL, xoff + clm->textR, rowY, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_LEADING, m_fontSpacing);
                 }
 
@@ -979,7 +979,7 @@ protected:
 
                 // License/SR
                 if (clm = m_columns.get((int)Columns::LICENSE)) {
-                    swprintf(s, _countof(s), L"%C %.1f", car.licenseChar, car.licenseSR);
+                    swprintf(s, _countof(s), L"%c %.1f", car.licenseChar, car.licenseSR);
                     r = { xoff + clm->textL, rowY - lineHeight / 2, xoff + clm->textR, rowY + lineHeight / 2 };
                     rr.rect = { r.left + 1, r.top + 1, r.right - 1, r.bottom - 1 };
                     rr.radiusX = 3;
@@ -1315,7 +1315,7 @@ protected:
                     }
                     else
                     {
-                        swprintf(s, _countof(s), L"#%S", car.carNumberStr.c_str());
+                        swprintf(s, _countof(s), L"#%s", car.carNumberStr.c_str());
                         r = { xoff + clm->textL, y - lineHeight / 2, xoff + clm->textR, y + lineHeight / 2 };
                         rr.rect = { r.left - 2, r.top + 1, r.right + 2, r.bottom - 1 };
                         rr.radiusX = 3;
@@ -1352,7 +1352,7 @@ protected:
                             displayName = displayName.substr(0, spacePos);
                         }
                     }
-                    swprintf(s, _countof(s), L"%S", displayName.c_str());
+                    swprintf(s, _countof(s), L"%s", displayName.c_str());
                     m_text.render(m_renderTarget.Get(), s, m_textFormat.Get(), xoff + clm->textL, xoff + clm->textR, y, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_LEADING, m_fontSpacing);
                 }
 
@@ -1378,7 +1378,7 @@ protected:
 
                 // License/SR
                 if (clm = m_columns.get((int)Columns::LICENSE)) {
-                    swprintf(s, _countof(s), L"%C %.1f", car.licenseChar, car.licenseSR);
+                    swprintf(s, _countof(s), L"%c %.1f", car.licenseChar, car.licenseSR);
                     r = { xoff + clm->textL, y - lineHeight / 2, xoff + clm->textR, y + lineHeight / 2 };
                     rr.rect = { r.left + 1, r.top + 1, r.right - 1, r.bottom - 1 };
                     rr.radiusX = 3;

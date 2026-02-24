@@ -381,7 +381,7 @@ class OverlayDDU : public Overlay
                     gearC = 'N';
                 else
                     gearC = char(gear + 48);
-                swprintf( s, _countof(s), L"%C", gearC );
+                swprintf( s, _countof(s), L"%c", gearC );
                 m_text.render( m_renderTarget.Get(), s, m_textFormatGear.Get(), m_boxGear.x0, m_boxGear.x1, m_boxGear.y0+m_boxGear.h*0.41f, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_CENTER, m_fontSpacing );
 
                 const float speedMps = ir_Speed.getFloat();
@@ -416,7 +416,7 @@ class OverlayDDU : public Overlay
                     _snprintf_s( lapsStr, _countof(lapsStr), _TRUNCATE, "~%d", remainingLaps );
                 else
                     _snprintf_s( lapsStr, _countof(lapsStr), _TRUNCATE, "%d", remainingLaps );
-                swprintf( s, _countof(s), L"%S", lapsStr );
+                swprintf( s, _countof(s), L"%s", lapsStr );
                 m_text.render( m_renderTarget.Get(), s, m_textFormatLarge.Get(), m_boxLaps.x0, m_boxLaps.x1, m_boxLaps.y0+m_boxLaps.h*0.55f, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_CENTER, m_fontSpacing );
 
                 m_text.render( m_renderTarget.Get(), L"TO GO", m_textFormatVerySmall.Get(), m_boxLaps.x0, m_boxLaps.x1, m_boxLaps.y0+m_boxLaps.h*0.75f, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_CENTER, m_fontSpacing );

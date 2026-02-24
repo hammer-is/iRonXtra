@@ -93,16 +93,8 @@ protected:
 		const bool flagIsDark = luminance(info.color) < 0.35f;
 
 		// Build strings
-		{
-			std::wstring wTop(info.topText.begin(), info.topText.end());
-			wcsncpy_s(sTop, wTop.c_str(), _countof(sTop) - 1);
-			sTop[_countof(sTop) - 1] = L'\0';
-		}
-		{
-			std::wstring wBottom(info.bottomText.begin(), info.bottomText.end());
-			wcsncpy_s(sBottom, wBottom.c_str(), _countof(sBottom) - 1);
-			sBottom[_countof(sBottom) - 1] = L'\0';
-		}
+		swprintf(sTop, _countof(sTop), L"%s", info.topText.c_str());
+		swprintf(sBottom, _countof(sBottom), L"%s", info.bottomText.c_str());
 
 		m_renderTarget->BeginDraw();
 		m_renderTarget->Clear( float4(0,0,0,0) );

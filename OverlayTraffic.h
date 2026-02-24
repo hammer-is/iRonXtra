@@ -287,7 +287,7 @@ protected:
                 std::wstring wClass = toWide(drawT.classShort.empty() ? std::string("FASTER") : drawT.classShort);
                 std::wstring wName = toWide(drawT.userName.empty() ? std::string("Car") : drawT.userName);
 
-                swprintf_s(line1, L"%s  #%S  %s", wClass.c_str(), drawT.carNumberStr.c_str(), wName.c_str());
+                swprintf_s(line1, L"%s  #%s  %s", wClass.c_str(), drawT.carNumberStr.c_str(), wName.c_str());
             }
 
             // Line 2: gap and distance
