@@ -34,6 +34,7 @@ SOFTWARE.
 #include <dwrite_1.h>
 #include <wrl.h>
 #include "util.h"
+#include <chrono>
 
 class Overlay
 {
@@ -106,6 +107,12 @@ class Overlay
         int             m_ypos = 0;
         int             m_width = 0;
         int             m_height = 0;
+
+#if defined(_DEBUG)
+        std::chrono::high_resolution_clock::time_point loopTimeStart;
+        float loopTimeAvg = 0.0f;
+        int m_dbgLineId = -1;
+#endif
 
         Microsoft::WRL::ComPtr<ID3D11Device>            m_d3dDevice;
         Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;

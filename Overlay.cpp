@@ -29,6 +29,7 @@ SOFTWARE.
 #include "Config.h"
 #include "Logger.h"
 #include <string>
+#include "OverlayDebug.h"
 
 using namespace Microsoft::WRL;
 
@@ -355,6 +356,10 @@ void Overlay::update()
     if( !m_enabled )
         return;
 
+#if defined(_DEBUG)
+    loopTimeStart = std::chrono::high_resolution_clock::now();
+#endif
+
     // Lightweight frame limiter to reduce CPU pressure when nothing urgent
     // Default 60 FPS, configurable via config per overlay name: target_fps
     const int cfgFps = std::max( 10, g_cfg.getInt(m_name, "target_fps", m_targetFPS) );
@@ -438,6 +443,21 @@ void Overlay::update()
     }
 
     HRCHECK(m_swapChain->Present( 1, 0 ));
+
+#if defined(_DEBUG)
+    std::chrono::high_resolution_clock::time_point loopTimeEnd = std::chrono::high_resolution_clock::now();
+    long long loopTimeDiff = std::chrono::duration_cast<std::chrono::microseconds>(loopTimeEnd - loopTimeStart).count();
+
+    loopTimeAvg = (loopTimeAvg / 30.0f) * 29.0f + (float)loopTimeDiff / 30.0f;
+    
+    std::string n_name = m_name;
+    if (n_name.size() < 20)
+        n_name.append(20 - n_name.size(), ' ');
+
+    dbg(m_dbgLineId, "%s%5d (AVG: %5.0f) microseconds", n_name.c_str(), loopTimeDiff, loopTimeAvg);
+
+    loopTimeStart = std::chrono::high_resolution_clock::now();
+#endif
 }
 
 void Overlay::setWindowPosAndSize( int x, int y, int w, int h, bool callSetWindowPos )

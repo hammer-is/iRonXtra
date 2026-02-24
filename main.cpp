@@ -467,6 +467,10 @@ int main()
 
         // Refresh connection and session info
         status = ir_tick();
+#if defined(_DEBUG)
+        std::chrono::high_resolution_clock::time_point loopTimeStart = std::chrono::high_resolution_clock::now();
+        float loopTimeAvg = 0.0f;
+#endif
         const bool nowHasDriver = ir_hasValidDriver();
         const int  nowStatusID  = irsdkClient::instance().getStatusID();
         if( status != prevStatus )
@@ -660,6 +664,18 @@ int main()
             break;
 
         frameCnt++;
+
+#if defined(_DEBUG)
+        std::chrono::high_resolution_clock::time_point loopTimeEnd = std::chrono::high_resolution_clock::now();
+        long long loopTimeDiff = std::chrono::duration_cast<std::chrono::microseconds>(loopTimeEnd - loopTimeStart).count();
+
+        loopTimeAvg = (loopTimeAvg / 30.0f) * 29.0f + (float)loopTimeDiff / 30.0f;
+            
+        static int dbg_id = -1;        
+        dbg(dbg_id, float4(0.0f, 1.0f, 1.0f, 1.0f) , "Main                %5d (AVG: %5.0f) microseconds", loopTimeDiff, loopTimeAvg);
+
+        loopTimeStart = std::chrono::high_resolution_clock::now();
+#endif
     }
 
     Logger::instance().logInfo("iRonXtra shutting down");
