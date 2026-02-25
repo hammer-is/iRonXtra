@@ -40,6 +40,7 @@ SOFTWARE.
 #include <ctype.h>
 #include <map>
 #include <filesystem>
+#include <stdexcept>
 #include "Logger.h"
 
 static constexpr bool hr_failed(HRESULT hr) noexcept { return FAILED(hr); }
@@ -224,18 +225,15 @@ inline bool directoryExistsW(const std::wstring& path)
 inline std::wstring resolveAssetPathW(const std::wstring& relative)
 {
     const std::wstring exeDir = getExecutableDirW();
-    std::wstring repo = exeDir + L"\\..\\..\\..\\" + relative;
-    if (directoryExistsW(repo)) return repo;
+
     std::wstring local = exeDir + L"\\" + relative;
     if (directoryExistsW(local)) return local;
-    // For debugging, let's also check if individual files exist
-    if (fileExistsW(repo)) return repo;
     if (fileExistsW(local)) return local;
-    // Try current working directory as final fallback
-    std::wstring cwd = L".\\";
-    std::wstring cwdPath = cwd + relative;
-    if (directoryExistsW(cwdPath)) return cwdPath;
-    return relative;
+
+    std::string error = "Asset path not found: " + std::string(local.begin(), local.end());
+    Logger::instance().logError(error);
+    printf("ERROR: %s\n", error.c_str());
+    throw std::runtime_error(error);
 }
 
 // --------------------

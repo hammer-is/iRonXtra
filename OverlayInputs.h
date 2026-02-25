@@ -28,6 +28,7 @@ SOFTWARE.
 #include "Config.h"
 #include "OverlayDebug.h"
 #include "stub_data.h"
+#include "util.h"
 #include <wincodec.h>
 #include <algorithm>
 #include <math.h>
@@ -744,29 +745,9 @@ class OverlayInputs : public Overlay
             if (mode == "moza_rs_v2") fileName = "assets/wheels/moza_rs_v2.png";
             if (fileName.empty()) return;
 
-            auto fileExistsW = [](const std::wstring& path) -> bool {
-                DWORD a = GetFileAttributesW(path.c_str());
-                return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY) == 0;
-            };
-            auto getExecutableDirW = []() -> std::wstring {
-                wchar_t path[MAX_PATH] = {0};
-                GetModuleFileNameW(NULL, path, MAX_PATH);
-                wchar_t* last = wcsrchr(path, L'\\');
-                if (last) *last = 0;
-                return std::wstring(path);
-            };
-            auto resolveAssetPath = [&](const std::wstring& relative) -> std::wstring {
-                const std::wstring exeDir = getExecutableDirW();
-                std::wstring repo = exeDir + L"\\..\\..\\" + relative;
-                if (fileExistsW(repo)) return repo;
-                std::wstring local = exeDir + L"\\" + relative;
-                if (fileExistsW(local)) return local;
-                return relative;
-            };
-
             if (!m_renderTarget.Get()) return;
 
-            std::wstring pathW = resolveAssetPath(toWide(fileName));
+            std::wstring pathW = resolveAssetPathW(toWide(fileName));
             Microsoft::WRL::ComPtr<IWICImagingFactory> wic;
             if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wic)))) return;
             Microsoft::WRL::ComPtr<IWICBitmapDecoder> decoder;

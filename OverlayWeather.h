@@ -37,6 +37,7 @@ SOFTWARE.
 #include "Config.h"
 #include "OverlayDebug.h"
 #include "stub_data.h"
+#include "util.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -532,35 +533,6 @@ class OverlayWeather : public Overlay
             return box;
         }
 
-        // Helpers for robust asset path resolution
-        static bool ow_fileExistsW(const std::wstring& path)
-        {
-            DWORD a = GetFileAttributesW(path.c_str());
-            return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY) == 0;
-        }
-
-        static std::wstring ow_getExecutableDirW()
-        {
-            wchar_t path[MAX_PATH] = {0};
-            GetModuleFileNameW(NULL, path, MAX_PATH);
-            wchar_t* last = wcsrchr(path, L'\\');
-            if (last) *last = 0;
-            return std::wstring(path);
-        }
-
-        static std::wstring ow_resolveAssetPath(const std::wstring& relative)
-        {
-            const std::wstring exeDir = ow_getExecutableDirW();
-            // Candidate 1: repo root three levels up from exe dir
-            std::wstring candidateRepo = exeDir + L"\\..\\..\\..\\" + relative;
-            if (ow_fileExistsW(candidateRepo)) return candidateRepo;
-            // Candidate 2: next to the executable
-            std::wstring candidateLocal = exeDir + L"\\" + relative;
-            if (ow_fileExistsW(candidateLocal)) return candidateLocal;
-            // Fallback: provided relative path
-            return relative;
-        }
-
         void loadIcons()
         {
             if (!m_wicFactory.Get() || !m_renderTarget.Get()) return;
@@ -597,13 +569,13 @@ class OverlayWeather : public Overlay
             };
 
             // Load all weather icons using resolved absolute paths
-            m_trackTempIcon     = loadPngIcon(ow_resolveAssetPath(L"assets\\icons\\track_temp.png"));
-            m_trackWetnessIcon  = loadPngIcon(ow_resolveAssetPath(L"assets\\icons\\waterdrop.png"));
-            m_sunIcon           = loadPngIcon(ow_resolveAssetPath(L"assets\\icons\\sun.png"));
-            m_precipitationIcon = loadPngIcon(ow_resolveAssetPath(L"assets\\icons\\precipitation.png"));
-            m_windIcon          = loadPngIcon(ow_resolveAssetPath(L"assets\\icons\\wind.png"));
-            m_carIcon           = loadPngIcon(ow_resolveAssetPath(L"assets\\sports_car.png"));
-            m_windArrowIcon     = loadPngIcon(ow_resolveAssetPath(L"assets\\wind_arrow.png"));
+            m_trackTempIcon     = loadPngIcon(resolveAssetPathW(L"assets\\icons\\track_temp.png"));
+            m_trackWetnessIcon  = loadPngIcon(resolveAssetPathW(L"assets\\icons\\waterdrop.png"));
+            m_sunIcon           = loadPngIcon(resolveAssetPathW(L"assets\\icons\\sun.png"));
+            m_precipitationIcon = loadPngIcon(resolveAssetPathW(L"assets\\icons\\precipitation.png"));
+            m_windIcon          = loadPngIcon(resolveAssetPathW(L"assets\\icons\\wind.png"));
+            m_carIcon           = loadPngIcon(resolveAssetPathW(L"assets\\sports_car.png"));
+            m_windArrowIcon     = loadPngIcon(resolveAssetPathW(L"assets\\wind_arrow.png"));
         }
 
         void releaseIcons()
