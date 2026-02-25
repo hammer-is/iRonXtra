@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-
 #include "OverlayDebug.h"
 #include <string>
 #include <vector>
@@ -92,6 +90,11 @@ void dbg( int &lineNumber, const char* fmt, ... )
 OverlayDebug::OverlayDebug()
     : Overlay("OverlayDebug")
 {}
+
+float2 OverlayDebug::getDefaultSize()
+{
+    return float2(450, 350);
+}
 
 void OverlayDebug::onEnable()
 {

@@ -36,6 +36,7 @@ class OverlayDebug : public Overlay
 public:
 
     OverlayDebug();
+    virtual float2 getDefaultSize();
     virtual void onEnable();
     virtual void onConfigChanged();
     virtual void onUpdate();
