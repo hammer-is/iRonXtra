@@ -63,3 +63,9 @@ target_compile_options(iRonXtra
     PUBLIC
 )
 
+add_custom_command(
+  TARGET ${PROJECT_NAME}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_newer "${PROJECT_SOURCE_DIR}/assets/" "${CMAKE_BINARY_DIR}/assets"
+  COMMENT "Copying '/assets' dir"
+)
