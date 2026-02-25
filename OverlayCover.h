@@ -44,8 +44,6 @@ class OverlayCover : public Overlay
 
         virtual void onConfigChanged()
         {
-            // Per-overlay FPS (configurable; default 10)
-            setTargetFPS(g_cfg.getInt(m_name, "target_fps", 10));
             // Cover is static – only redraw on demand
             setStaticMode(true);
             requestRedraw();
