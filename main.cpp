@@ -395,6 +395,7 @@ int main()
 
     // Create overlays
     std::vector<Overlay*> overlays;
+    overlays.push_back( new OverlayWeather() );
     overlays.push_back( new OverlayCover() );
     overlays.push_back( new OverlayRelative() );
     overlays.push_back( new OverlayInputs() );
@@ -406,7 +407,6 @@ int main()
     overlays.push_back( new OverlayDDU() );
     overlays.push_back( new OverlayFuel() );
     overlays.push_back( new OverlayTire() );
-    overlays.push_back( new OverlayWeather() );
     overlays.push_back( new OverlayFlags() );
     overlays.push_back( new OverlayDelta() );
     overlays.push_back( new OverlayRadar() );
@@ -641,7 +641,7 @@ int main()
         loopTimeAvg = (loopTimeAvg / 30.0f) * 29.0f + (float)loopTimeDiff / 30.0f;
             
         static int dbg_id = -1;        
-        dbg(dbg_id, float4(0.0f, 1.0f, 1.0f, 1.0f) , "Main                %5d (AVG: %5.0f) microseconds", loopTimeDiff, loopTimeAvg);
+        dbg(dbg_id, "Main                %5d (AVG: %5.0f) microseconds", loopTimeDiff, loopTimeAvg);
 
         loopTimeStart = std::chrono::high_resolution_clock::now();
 #endif
