@@ -285,8 +285,6 @@ static std::string GetProductVersion()
 
 int main()
 {
-    Logger::instance().logInfo("iRonXtra starting");
-
     // Single-instance guard
     HANDLE singleInstanceMutex = NULL;
 
@@ -322,6 +320,10 @@ int main()
             Logger::instance().init(logPath);
         }
     }
+
+    std::string version = GetProductVersion();
+
+    Logger::instance().logInfo("iRonXtra v" + version + " starting up");
 
     std::set_terminate([]
     {
@@ -409,11 +411,9 @@ int main()
     // Register global hotkeys
     registerHotkeys();
 
-    std::string version = GetProductVersion();
+    SetConsoleTitle((std::string("iRonXtra v") + version).c_str());
 
-    SetConsoleTitle((std::string("iRonXtra ") + version).c_str());
-
-    printf("iRonXtra %s https://github.com/hammer-is/iRonXtra - overlays for iRacing running in windowed mode.\n\n", version.c_str());
+    printf("iRonXtra v%s https://github.com/hammer-is/iRonXtra - overlays for iRacing running in windowed mode.\n\n", version.c_str());
     printf("Special thanks to https://github.com/lespalt for creating iRon and https://github.com/SemSodermans31 for iFL03.\n\n");
     printf("Current hotkeys:\n");
     printf("    Move and resize overlays:     %s\n", g_cfg.getString("General","ui_edit_hotkey","").c_str() );
