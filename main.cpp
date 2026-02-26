@@ -240,6 +240,49 @@ static std::atomic<bool> g_watchdogRunning{false};
 static std::atomic<bool> g_watchdogStalled{false};
 static DWORD g_lastConfigReloadLogTick = 0;
 
+static std::string GetProductVersion()
+{
+    std::string strResult;
+
+    char szModPath[ MAX_PATH ];
+    szModPath[ 0 ] = '\0';
+    GetModuleFileName( NULL, szModPath, sizeof(szModPath) );
+    DWORD dwHandle;
+    DWORD dwSize = GetFileVersionInfoSize( szModPath, &dwHandle );
+
+    if( dwSize > 0 )
+    {
+        BYTE* pbBuf = static_cast<BYTE*>( alloca( dwSize ) );
+        if( GetFileVersionInfo( szModPath, dwHandle, dwSize, pbBuf ) )
+        {
+            UINT uiSize;
+            BYTE* lpb;
+            if( VerQueryValue( pbBuf,
+                               "\\VarFileInfo\\Translation",
+                               (void**)&lpb,
+                               &uiSize ) )
+            {
+                WORD* lpw = (WORD*)lpb;
+                std::string strQuery;
+                strQuery = "\\StringFileInfo\\";
+                char buffer[10];
+                sprintf_s(buffer, "%04x%04x", lpw[ 0 ], lpw[ 1 ]);
+                strQuery += buffer;
+                strQuery += "\\ProductVersion";
+                if( VerQueryValue( pbBuf,
+                                   const_cast<LPSTR>( (LPCSTR)strQuery.c_str() ),
+                                   (void**)&lpb,
+                                   &uiSize ) && uiSize > 0 )
+                {
+                    strResult = (LPCSTR)lpb;
+                }
+            }
+        }
+    }
+
+    return strResult;
+}
+
 int main()
 {
     Logger::instance().logInfo("iRonXtra starting");
@@ -366,9 +409,11 @@ int main()
     // Register global hotkeys
     registerHotkeys();
 
-    SetConsoleTitle("iRonXtra - hammer-is/iRonXtra");
+    std::string version = GetProductVersion();
 
-    printf("iRonXtra (%s %s) https://github.com/hammer-is/iRonXtra - overlays for iRacing running in windowed mode.\n\n",__DATE__,__TIME__);
+    SetConsoleTitle((std::string("iRonXtra ") + version).c_str());
+
+    printf("iRonXtra %s https://github.com/hammer-is/iRonXtra - overlays for iRacing running in windowed mode.\n\n", version.c_str());
     printf("Special thanks to https://github.com/lespalt for creating iRon and https://github.com/SemSodermans31 for iFL03.\n\n");
     printf("Current hotkeys:\n");
     printf("    Move and resize overlays:     %s\n", g_cfg.getString("General","ui_edit_hotkey","").c_str() );
