@@ -240,10 +240,51 @@ static std::atomic<bool> g_watchdogRunning{false};
 static std::atomic<bool> g_watchdogStalled{false};
 static DWORD g_lastConfigReloadLogTick = 0;
 
+static std::string GetProductVersion()
+{
+    std::string strResult;
+
+    char szModPath[ MAX_PATH ];
+    szModPath[ 0 ] = '\0';
+    GetModuleFileName( NULL, szModPath, sizeof(szModPath) );
+    DWORD dwHandle;
+    DWORD dwSize = GetFileVersionInfoSize( szModPath, &dwHandle );
+
+    if( dwSize > 0 )
+    {
+        BYTE* pbBuf = static_cast<BYTE*>( alloca( dwSize ) );
+        if( GetFileVersionInfo( szModPath, dwHandle, dwSize, pbBuf ) )
+        {
+            UINT uiSize;
+            BYTE* lpb;
+            if( VerQueryValue( pbBuf,
+                               "\\VarFileInfo\\Translation",
+                               (void**)&lpb,
+                               &uiSize ) )
+            {
+                WORD* lpw = (WORD*)lpb;
+                std::string strQuery;
+                strQuery = "\\StringFileInfo\\";
+                char buffer[10];
+                sprintf_s(buffer, "%04x%04x", lpw[ 0 ], lpw[ 1 ]);
+                strQuery += buffer;
+                strQuery += "\\ProductVersion";
+                if( VerQueryValue( pbBuf,
+                                   const_cast<LPSTR>( (LPCSTR)strQuery.c_str() ),
+                                   (void**)&lpb,
+                                   &uiSize ) && uiSize > 0 )
+                {
+                    strResult = (LPCSTR)lpb;
+                }
+            }
+        }
+    }
+
+    return strResult;
+}
+
 int main()
 {
-    Logger::instance().logInfo("iRonXtra starting");
-
     // Single-instance guard
     HANDLE singleInstanceMutex = NULL;
 
@@ -279,6 +320,10 @@ int main()
             Logger::instance().init(logPath);
         }
     }
+
+    std::string version = GetProductVersion();
+
+    Logger::instance().logInfo("iRonXtra v" + version + " starting up");
 
     std::set_terminate([]
     {
@@ -366,10 +411,10 @@ int main()
     // Register global hotkeys
     registerHotkeys();
 
-    SetConsoleTitle("iRonXtra - hammer-is/iRonXtra");
+    SetConsoleTitle((std::string("iRonXtra v") + version).c_str());
 
-    printf("iRonXtra (%s %s) https://github.com/hammer-is/iRonXtra - overlays for iRacing running in windowed mode.\n\n",__DATE__,__TIME__);
-    printf("Special thanks to https://github.com/lespalt for creating iRon and https://github.com/SemSodermans31 for iFL03.\n\n");
+    printf("iRonXtra v%s (%s %s) https://github.com/hammer-is/iRonXtra - overlays for iRacing\n\n", version.c_str(), __DATE__, __TIME__);
+    printf("Special thanks to https://github.com/lespalt for iRon and https://github.com/SemSodermans31 for iFL03\n\n");
     printf("Current hotkeys:\n");
     printf("    Move and resize overlays:     %s\n", g_cfg.getString("General","ui_edit_hotkey","").c_str() );
     printf("    Toggle preview mode:          %s\n", g_cfg.getString("General","preview_hotkey", "").c_str());
@@ -387,7 +432,7 @@ int main()
     printf("    Toggle track overlay:         %s\n", g_cfg.getString("OverlayTrack","toggle_hotkey","").c_str() );
     printf("    Toggle pit overlay:           %s\n", g_cfg.getString("OverlayPit","toggle_hotkey","").c_str() );
     printf("    Toggle traffic overlay:       %s\n", g_cfg.getString("OverlayTraffic","toggle_hotkey","").c_str() );
-    printf("\nEdit \'config.json\' at any time to customize your overlays and hotkeys. Read 'logs.txt' for runtime info.\n\n");
+    printf("\nEdit \'config.json\' at any time to customize overlays and hotkeys. Read 'logs.txt' for runtime info.\n\n");
 
     // Preload car brand icons once
     std::map<std::string, IWICFormatConverter*> carBrandIcons;
