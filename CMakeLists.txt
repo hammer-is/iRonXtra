@@ -52,6 +52,7 @@ target_link_libraries(iRonXtra
         uuid.lib
         odbc32.lib
         odbccp32.lib
+        version.lib
         DXGI.lib
         d2d1.lib
         D3D11.lib
