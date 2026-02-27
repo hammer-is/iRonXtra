@@ -407,7 +407,7 @@ class OverlayDDU : public Overlay
                     _snprintf_s( lapsStr, _countof(lapsStr), _TRUNCATE, "--" );
                 else
                     _snprintf_s( lapsStr, _countof(lapsStr), _TRUNCATE, "%d", totalLaps );
-                swprintf( s, _countof(s), L"%d / %S", currentLap, lapsStr );
+                swprintf( s, _countof(s), L"%d / %s", currentLap, lapsStr );
                 m_text.render( m_renderTarget.Get(), s, m_textFormat.Get(), m_boxLaps.x0, m_boxLaps.x1, m_boxLaps.y0+m_boxLaps.h*0.25f, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_CENTER, m_fontSpacing );
 
                 if( remainingLaps < 0 )
