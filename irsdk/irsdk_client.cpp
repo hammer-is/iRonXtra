@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "irsdk_defines.h"
 #include "yaml_parser.h"
 #include "irsdk_client.h"
+#include "..\Logger.h"
 
 #pragma warning(disable:4996)
 
@@ -477,6 +478,13 @@ bool irsdkCVar::checkIdx()
 		{
 			m_statusID = irsdkClient::instance().getStatusID();
 			m_idx = irsdkClient::instance().getVarIdx(m_name);
+			if (m_idx == -1)
+			{
+				Logger::instance().logError("Variable not found (iRacing API changed?): " + std::string(m_name));
+#ifdef _DEBUG
+				Logger::instance().logInfo("Available variables: " + std::string(irsdk_varNames()));
+#endif
+			}
 		}
 
 		return true;
@@ -508,28 +516,28 @@ bool irsdkCVar::isValid()
 
 bool irsdkCVar::getBool(int entry)
 {
-	if(checkIdx())
+	if(checkIdx() && isValid())
 		return irsdkClient::instance().getVarBool(m_idx, entry);
 	return false;
 }
 
 int irsdkCVar::getInt(int entry)
 {
-	if(checkIdx())
+	if(checkIdx() && isValid())
 		return irsdkClient::instance().getVarInt(m_idx, entry);
 	return 0;
 }
 
 float irsdkCVar::getFloat(int entry)
 {
-	if(checkIdx())
+	if(checkIdx() && isValid())
 		return irsdkClient::instance().getVarFloat(m_idx, entry);
 	return 0.0f;
 }
 
 double irsdkCVar::getDouble(int entry)
 {
-	if(checkIdx())
+	if(checkIdx() && isValid())
 		return irsdkClient::instance().getVarDouble(m_idx, entry);
 	return 0.0;
 }

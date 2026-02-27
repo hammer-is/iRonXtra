@@ -448,6 +448,7 @@ const irsdk_varHeader *irsdk_getVarHeaderEntry(int index);
 
 int irsdk_varNameToIndex(const char *name);
 int irsdk_varNameToOffset(const char *name);
+const char *irsdk_varNames();
 
 //----
 // Remote controll the sim by sending these windows messages

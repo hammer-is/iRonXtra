@@ -45,6 +45,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "irsdk_defines.h"
+#include <vector>
+#include <string>
+#include <algorithm>
 
 // for timeBeginPeriod()
 #pragma comment(lib, "Winmm")
@@ -295,7 +298,7 @@ int irsdk_varNameToIndex(const char *name)
 {
 	const irsdk_varHeader *pVar;
 
-	if(name)
+	if(name && isInitialized && pHeader)
 	{
 		for(int index=0; index<pHeader->numVars; index++)
 		{
@@ -314,7 +317,7 @@ int irsdk_varNameToOffset(const char *name)
 {
 	const irsdk_varHeader *pVar;
 
-	if(name)
+	if(name && isInitialized && pHeader)
 	{
 		for(int index=0; index<pHeader->numVars; index++)
 		{
@@ -327,6 +330,43 @@ int irsdk_varNameToOffset(const char *name)
 	}
 
 	return -1;
+}
+
+const char *irsdk_varNames()
+{
+	if (!isInitialized || !pHeader)
+	{
+		return ""; // Return an empty string if not initialized
+	}
+
+	std::vector<std::string> varNames;
+
+	// Collect all variable names
+	for (int index = 0; index < pHeader->numVars; index++)
+	{
+		const irsdk_varHeader* pVar = irsdk_getVarHeaderEntry(index);
+		if (pVar)
+		{
+			varNames.emplace_back(pVar->name);
+		}
+	}
+
+	// Sort the variable names alphabetically
+	std::sort(varNames.begin(), varNames.end());
+
+	// Concatenate the names into a single space-separated string
+	static std::string result; // Use a static string to persist after function returns
+	result.clear();
+	for (size_t i = 0; i < varNames.size(); ++i)
+	{
+		result += varNames[i];
+		if (i < varNames.size() - 1)
+		{
+			result += " "; // Add a space between names
+		}
+	}
+
+	return result.c_str(); // Return the C-style string
 }
 
 unsigned int irsdk_getBroadcastMsgID()
