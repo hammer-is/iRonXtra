@@ -11,6 +11,7 @@ add_executable(iRonXtra
     OverlayDebug.cpp
     preview_mode.cpp
     stub_data.cpp
+    HPR.cpp
     irsdk/irsdk_client.cpp
     irsdk/irsdk_utils.cpp
     irsdk/yaml_parser.cpp
@@ -58,6 +59,7 @@ target_link_libraries(iRonXtra
         D3D11.lib
         Dcomp.lib
         Dwrite.lib
+        hid.lib
 )
 
 target_compile_options(iRonXtra
