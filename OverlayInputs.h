@@ -33,6 +33,7 @@ SOFTWARE.
 #include <algorithm>
 #include <math.h>
 #include <vector>
+#include "HPR.h"
 
 class OverlayInputs : public Overlay
 {
@@ -40,7 +41,20 @@ class OverlayInputs : public Overlay
 
         OverlayInputs()
             : Overlay("OverlayInputs")
-        {}
+        {
+            //ToDo: Remove or cleanup logging
+            pedalsDevice = hpr.Initialize(true, [](const std::string& info) {
+                std::cout << info << std::endl;
+                });
+
+            if (pedalsDevice == HPR::PedalsDevice::None)
+                std::cout << "No supported pedals found." << std::endl;
+        }
+
+        ~OverlayInputs()
+        {
+            hpr.Uninitialize();
+        }
 
         virtual void onEnable()
         {
@@ -48,6 +62,8 @@ class OverlayInputs : public Overlay
         }
 
     protected:
+        HPR hpr;
+        HPR::PedalsDevice pedalsDevice = HPR::PedalsDevice::None;
 
         virtual bool hasCustomBackground()
         {
@@ -712,6 +728,21 @@ class OverlayInputs : public Overlay
             }
 
             m_renderTarget->EndDraw();
+
+            // Simagic HPR test
+            if (pedalsDevice != HPR::PedalsDevice::None)
+            {
+                // ToDo: No need to update every frame (60Hz) as the HPR (20Hz) cannot react that fast
+                if (absActive)
+                {
+                    // ToDo: Configurable vibration strength and frequency. Adjustable min value?
+                    hpr.VibratePedal(HPR::Channel::Brake, HPR::State::On, 20, currentBrake * 100.0f); // Vibration intensity scaled by brake
+                }
+                else
+                {
+                    hpr.VibratePedal(HPR::Channel::Brake, HPR::State::Off, 0, 0.0f);
+                }
+            }
         }
 
     protected:
