@@ -1,4 +1,4 @@
-# iRonXtra — modern iRacing overlays
+# iRonXtra — modern iRacing overlays & Simagic pedal haptics
 
 iRonXtra is a lightweight overlay suite for iRacing built in C++
 
@@ -98,6 +98,7 @@ Compact dashboard with everything you’d otherwise flip through in black boxes:
 Pedal traces and steering visualization for driving consistency work:
 - Scrolling throttle and brake traces (configurable thickness/colors)
 - ABS brake trace and extra visual indicator when active as background of overlay turns yellow (can be turned off if too distracting)
+- Simagic pedal haptics for ABS. Amplitude is configurable and relative to brake input (unless min and max value is set to same value).
 - Vertical percentage bars for clutch, brake, throttle with numeric readouts
 - Steering indicator: ring + rotating column or an image wheel (Moza KS / RS v2)
 - On‑wheel speed and gear when using the built‑in ring
