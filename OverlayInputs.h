@@ -77,6 +77,11 @@ class OverlayInputs : public Overlay
 
         virtual void onConfigChanged()
         {
+            m_hpr_abs_enabled = g_cfg.getBool( m_name, "hpr_abs_enabled", true );
+            m_hpr_abs_frequency = g_cfg.getInt( m_name, "hpr_abs_frequency",  20);
+            m_hpr_abs_amplitude_min = g_cfg.getFloat(m_name, "hpr_abs_amplitude_min", 30.0f);
+            m_hpr_abs_amplitude_max = g_cfg.getFloat(m_name, "hpr_abs_amplitude_max", 60.0f);
+
             m_showSteeringWheel = g_cfg.getBool( m_name, "show_steering_wheel", true );
             m_showGhost = g_cfg.getBool( m_name, "show_ghost_data", false );
             m_showClutch = g_cfg.getBool(m_name, "show_clutch", true);
@@ -729,18 +734,17 @@ class OverlayInputs : public Overlay
 
             m_renderTarget->EndDraw();
 
-            // Simagic HPR test
-            if (pedalsDevice != HPR::PedalsDevice::None)
+
+            if (m_hpr_abs_enabled && pedalsDevice != HPR::PedalsDevice::None)
             {
-                // ToDo: No need to update every frame (60Hz) as the HPR (20Hz) cannot react that fast
-                if (absActive)
+                if (absActive && currentBrake > 0.02f)
                 {
-                    // ToDo: Configurable vibration strength and frequency. Adjustable min value?
-                    hpr.VibratePedal(HPR::Channel::Brake, HPR::State::On, 20, currentBrake * 100.0f); // Vibration intensity scaled by brake
+                    float amplitude = (currentBrake * (m_hpr_abs_amplitude_max - m_hpr_abs_amplitude_min) + m_hpr_abs_amplitude_min);
+                    hpr.VibratePedal(HPR::Channel::Brake, m_hpr_abs_frequency, amplitude);
                 }
                 else
                 {
-                    hpr.VibratePedal(HPR::Channel::Brake, HPR::State::Off, 0, 0.0f);
+                    hpr.VibratePedal(HPR::Channel::Brake, 0, 0.0f);
                 }
             }
         }
@@ -757,9 +761,14 @@ class OverlayInputs : public Overlay
         Microsoft::WRL::ComPtr<IDWriteTextFormat> m_textFormatBold;
         Microsoft::WRL::ComPtr<IDWriteTextFormat> m_textFormatPercent;
         Microsoft::WRL::ComPtr<ID2D1Bitmap> m_wheelBitmap;
-        bool m_showSteeringWheel = true;
-        bool m_showGhost = false;
-        bool m_showClutch = true;
+        bool m_showSteeringWheel;
+        bool m_showGhost;
+        bool m_showClutch;
+
+        bool m_hpr_abs_enabled;
+        int m_hpr_abs_frequency;
+        float m_hpr_abs_amplitude_min;
+        float m_hpr_abs_amplitude_max;
 
         struct GhostSample { float lapPct; float throttle; float brake; float steerAngle; };
         std::vector<GhostSample> m_ghostSamples;

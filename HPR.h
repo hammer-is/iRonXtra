@@ -40,7 +40,7 @@ public:
     void Uninitialize() noexcept;
 
     // frequency: 0-50, amplitude: 0-100
-    void VibratePedal(Channel channel, State state, float frequency, float amplitude);
+    void VibratePedal(Channel channel, float frequency, float amplitude);
 
 private:
     HANDLE OpenRawDeviceStream(const std::wstring& devicePath) const;

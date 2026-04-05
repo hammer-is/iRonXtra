@@ -215,9 +215,9 @@ HPR::PedalsDevice HPR::Initialize(bool enabled, std::function<void(const std::st
 
                 // ensure buffer is zeroed and send off to all channels
                 ZeroMemory(_vibrateBuffer, sizeof(_vibrateBuffer));
-                VibratePedal(Channel::Clutch, State::Off, 0.0f, 0.0f);
-                VibratePedal(Channel::Brake, State::Off, 0.0f, 0.0f);
-                VibratePedal(Channel::Throttle, State::Off, 0.0f, 0.0f);
+                VibratePedal(Channel::Clutch, 0.0f, 0.0f);
+                VibratePedal(Channel::Brake, 0.0f, 0.0f);
+                VibratePedal(Channel::Throttle, 0.0f, 0.0f);
             }
         }
     }
@@ -236,9 +236,9 @@ void HPR::Uninitialize() noexcept
 
     if (_initialized)
     {
-        VibratePedal(Channel::Clutch, State::Off, 0.0f, 0.0f);
-        VibratePedal(Channel::Brake, State::Off, 0.0f, 0.0f);
-        VibratePedal(Channel::Throttle, State::Off, 0.0f, 0.0f);
+        VibratePedal(Channel::Clutch, 0.0f, 0.0f);
+        VibratePedal(Channel::Brake, 0.0f, 0.0f);
+        VibratePedal(Channel::Throttle, 0.0f, 0.0f);
     }
 
     _initialized = false;
@@ -250,16 +250,14 @@ void HPR::Uninitialize() noexcept
     }
 }
 
-void HPR::VibratePedal(Channel channel, State state, float frequency, float amplitude)
+// P2000 seems to limit each vibration to max ~3 secs. However frequency and amplitude can be updated within that timeframe.
+// Limit is possibly in place to prevent overheating
+void HPR::VibratePedal(Channel channel, float frequency, float amplitude)
 {
-    std::cout << "VibratePedal called with channel=" << static_cast<int>(channel)
-         << ", state=" << static_cast<int>(state)
-         << ", frequency=" << frequency
-         << ", amplitude=" << amplitude
-		<< std::endl;
-
     if (!_initialized) return;
     if (_deviceHandle == INVALID_HANDLE_VALUE) return;
+
+    State state = State::On;
 
     int ch = static_cast<int>(channel);
 
@@ -275,6 +273,13 @@ void HPR::VibratePedal(Channel channel, State state, float frequency, float ampl
 
     if (_lastState[ch] != static_cast<int>(state) || _lastFrequency[ch] != intFrequency || _lastAmplitude[ch] != intAmplitude)
     {
+#if defined(_DEBUG)        
+        std::cout << "VibratePedal channel=" << static_cast<int>(channel)
+            << ", state=" << static_cast<int>(state)
+            << ", frequency=" << frequency
+            << ", amplitude=" << amplitude
+            << std::endl;        
+#endif        
         _lastState[ch] = static_cast<int>(state);
         _lastFrequency[ch] = intFrequency;
         _lastAmplitude[ch] = intAmplitude;
